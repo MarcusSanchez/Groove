@@ -15,7 +15,7 @@ func main() {
 
 	app := fiber.New()
 	middleware.Attach(app)
-	router.Start(app)
+	router.Start(app.Group("/api"))
 
 	_ = app.Listen(":" + env.Port)
 }

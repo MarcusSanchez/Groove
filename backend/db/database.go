@@ -17,6 +17,8 @@ func init() {
 	if err != nil {
 		log.Fatal("failed connecting to postgresql: ", err)
 	}
+
+	go SpawnSessionCleaner()
 }
 
 func Migrations() {

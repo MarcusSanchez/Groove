@@ -17,7 +17,8 @@ func (Session) Fields() []ent.Field {
 		field.Int("id").Immutable(),
 		field.Int("user_id"),
 		field.String("token"),
-		field.Time("expires_at"),
+		field.String("csrf"),
+		field.Time("expiration"),
 	}
 }
 
