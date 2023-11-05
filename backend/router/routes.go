@@ -1,8 +1,8 @@
 package router
 
 import (
-	"GrooveGuru/middleware"
 	"GrooveGuru/router/handlers"
+	"GrooveGuru/router/middleware"
 	"github.com/gofiber/fiber/v2"
 )
 

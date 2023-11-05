@@ -33,6 +33,8 @@ func (User) Edges() []ent.Edge {
 			// When User is deleted, cascade SpotifyLink referencing it.
 			Annotations(entsql.OnDelete(entsql.Cascade)),
 		// O2M User <--> Session
-		edge.To("session", Session.Type).Annotations(entsql.OnDelete("CASCADE")),
+		edge.To("session", Session.Type).
+			// When User is deleted, cascade Session referencing it.
+			Annotations(entsql.OnDelete(entsql.Cascade)),
 	}
 }

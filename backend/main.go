@@ -3,8 +3,8 @@ package main
 import (
 	"GrooveGuru/db"
 	"GrooveGuru/env"
-	"GrooveGuru/middleware"
 	"GrooveGuru/router"
+	"GrooveGuru/router/middleware"
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/lib/pq"
 )

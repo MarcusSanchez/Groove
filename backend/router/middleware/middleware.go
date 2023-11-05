@@ -8,6 +8,7 @@ import (
 	"errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	recovery "github.com/gofiber/fiber/v2/middleware/recover"
 	"log"
@@ -17,21 +18,26 @@ import (
 
 var client, ctx = db.Instance()
 
-// Attach attaches the middleware that run on all endpoints
+// Attach attaches the middleware that run on all endpoints.
 func Attach(app *fiber.App) {
 	app.Use(logger.New())
+	// if the server were to crash, this would restart the server.
 	app.Use(recovery.New())
-	if !env.IsProd {
+	switch env.IsProd {
+	case false:
 		// in development, frontend and backend are listening on different ports;
 		// therefore CORS needs to be configured to allow all origins.
 		app.Use(cors.New(cors.Config{
 			AllowOrigins: "*",
 		}))
+	case true:
+		// limits repeated requests to endpoints; protection against brute-force attacks.
+		app.Use(limiter.New())
 	}
 }
 
 // RedirectAuthorized redirects to the home page if the user is authorized.
-// Useful for instances where the user should not be logged.
+// Useful for instances where the user should not be logged-in/authenticated.
 // i.e. login and register pages.
 func RedirectAuthorized(c *fiber.Ctx) error {
 	authorization := c.Cookies("Authorization")
@@ -121,6 +127,13 @@ func CheckCSRF(c *fiber.Ctx) error {
 	} else if err != nil {
 		logError("CheckCSRF[MIDDLEWARE]", "checking session", err)
 		return c.Status(fiber.StatusInternalServerError).SendString("error while authorizing")
+	}
+
+	// check if session has expired.
+	if session.Expiration.Before(time.Now()) {
+		c.ClearCookie("Authorization")
+		c.ClearCookie("Csrf")
+		return unauthorized(c)
 	}
 
 	if session.Csrf != payload.Csrf {
