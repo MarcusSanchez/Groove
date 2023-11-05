@@ -13,10 +13,9 @@ import (
 )
 
 // Register creates a new user and session and sets Authorization cookie.
-// It returns a 400 if the username or email is already taken.
-// It returns a 201 if the user and session are created.
+// returns a 400 if the username or email is already taken.
+// returns a 201 if the user and session are created.
 func Register(c *fiber.Ctx, password, username, email string) error {
-
 	// check if the username is already taken.
 	exists, err := client.User.
 		Query().
@@ -41,7 +40,7 @@ func Register(c *fiber.Ctx, password, username, email string) error {
 		return badRequest(c, "email already exists")
 	}
 
-	// encrypt the password
+	// reassign password to the hashed and salted version.
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
 		logError("Register", "encrypt password", err)
@@ -111,8 +110,8 @@ func Register(c *fiber.Ctx, password, username, email string) error {
 }
 
 // Login creates a new session and sets Authorization cookie.
-// It returns a 400 if the username does not exist or the password is incorrect.
-// It returns a 201 if the session is created.
+// returns a 400 if the username does not exist or the password is incorrect.
+// returns a 201 if the session is created.
 func Login(c *fiber.Ctx, username, password string) error {
 
 	// grab user from database.
@@ -179,6 +178,8 @@ func Login(c *fiber.Ctx, username, password string) error {
 	})
 }
 
+// Logout deletes the session and clears the Authorization cookie.
+// returns a 204 if the session is deleted.
 func Logout(c *fiber.Ctx) error {
 	session := c.Locals("session").(*ent.Session)
 
