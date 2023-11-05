@@ -185,7 +185,7 @@ func Logout(c *fiber.Ctx) error {
 	err := client.Session.DeleteOne(session).Exec(ctx)
 	if err != nil {
 		logError("Logout", "delete session", err)
-		// we don't need to tell them this failed. (it shouldn't fail anyway)
+		// we don't need to alert the user this failed. (it shouldn't fail anyway)
 		// they will lose access to their account, and the session background worker will clean it up.
 	}
 

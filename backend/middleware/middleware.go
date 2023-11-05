@@ -5,11 +5,13 @@ import (
 	"GrooveGuru/ent"
 	Session "GrooveGuru/ent/session"
 	"GrooveGuru/env"
+	"errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	recovery "github.com/gofiber/fiber/v2/middleware/recover"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -29,6 +31,8 @@ func Attach(app *fiber.App) {
 }
 
 // RedirectAuthorized redirects to the home page if the user is authorized.
+// Useful for instances where the user should not be logged.
+// i.e. login and register pages.
 func RedirectAuthorized(c *fiber.Ctx) error {
 	authorization := c.Cookies("Authorization")
 	if authorization == "" {
@@ -57,6 +61,8 @@ func RedirectAuthorized(c *fiber.Ctx) error {
 }
 
 // AuthorizeAny authorizes the user if the Authorization cookie is set and valid (no permissions necessary).
+// for general use of endpoints where the user just needs to be logged in.
+// i.e. viewing content, searching songs, etc...
 func AuthorizeAny(c *fiber.Ctx) error {
 	authorization := c.Cookies("Authorization")
 	if authorization == "" {
@@ -86,6 +92,10 @@ func AuthorizeAny(c *fiber.Ctx) error {
 }
 
 // CheckCSRF checks if the Csrf token in the body matches the one in the session.
+// for use of endpoints where the user needs to be logged in and the request needs to be verified.
+// i.e. actions with side effects (creating, updating, deleting, etc...)
+//
+// NOTE: this middleware fulfills the same purpose as AuthorizeAny, no need to use both.
 func CheckCSRF(c *fiber.Ctx) error {
 
 	type CSRF struct {
@@ -115,6 +125,11 @@ func CheckCSRF(c *fiber.Ctx) error {
 
 	if session.Csrf != payload.Csrf {
 		// request was forged.
+		logError(
+			"CheckCSRF[MIDDLEWARE]",
+			"Attempted CSRF",
+			errors.New("csrf token mismatch for user: "+strconv.Itoa(session.UserID)),
+		)
 		return forbiddened(c)
 	}
 
