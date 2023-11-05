@@ -11,7 +11,7 @@ func Start(app fiber.Router) {
 		return c.Status(200).SendString("OK")
 	})
 
-	app.Post("/register", handlers.Register).Use(middleware.RedirectAuthorized)
-	app.Post("/login", handlers.Login).Use(middleware.RedirectAuthorized)
-	app.Post("/logout", handlers.Logout).Use(middleware.CheckCSRF)
+	app.Post("/register", middleware.RedirectAuthorized, handlers.Register)
+	app.Post("/login", middleware.RedirectAuthorized, handlers.Login)
+	app.Post("/logout", middleware.CheckCSRF, handlers.Logout)
 }

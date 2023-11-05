@@ -3,6 +3,7 @@ package handlers
 import (
 	"GrooveGuru/router/actions"
 	"github.com/gofiber/fiber/v2"
+	"strings"
 )
 
 func Register(c *fiber.Ctx) error {
@@ -21,7 +22,7 @@ func Register(c *fiber.Ctx) error {
 	response := actions.Register(c,
 		payload.Password,
 		payload.Username,
-		payload.Email,
+		strings.ToLower(payload.Email),
 	)
 	return response
 }

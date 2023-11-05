@@ -109,11 +109,12 @@ func CheckCSRF(c *fiber.Ctx) error {
 		c.ClearCookie("Csrf")
 		return unauthorized(c)
 	} else if err != nil {
-		return forbiddened(c)
+		logError("CheckCSRF[MIDDLEWARE]", "checking session", err)
+		return c.Status(fiber.StatusInternalServerError).SendString("error while authorizing")
 	}
 
 	if session.Csrf != payload.Csrf {
-		//Csrf was forged.
+		// request was forged.
 		return forbiddened(c)
 	}
 
