@@ -28,7 +28,7 @@ func SpawnSessionCleaner() {
 			Where(session.ExpirationLT(time.Now())).
 			Exec(ctx)
 		if err != nil {
-			logError("SessionCleaner", "Worker", err)
+			logError("SessionCleaner[CRON]", "Worker", err)
 		} else {
 			log.Printf(
 				"[%s] [SUCCESS] Session Cleared (affected: %d)\n",

@@ -26,9 +26,10 @@ func Attach(app *fiber.App) {
 	switch env.IsProd {
 	case false:
 		// in development, frontend and backend are listening on different ports;
-		// therefore CORS needs to be configured to allow all origins.
+		// therefore CORS needs to be configured to allow the frontend url.
 		app.Use(cors.New(cors.Config{
-			AllowOrigins: "*",
+			AllowOrigins:     env.FrontendURL,
+			AllowCredentials: true,
 		}))
 	case true:
 		// limits repeated requests to endpoints; protection against brute-force attacks.
