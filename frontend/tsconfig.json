@@ -14,8 +14,9 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["src/*"],
-      "Stores": ["src/stores.ts"],
+      "@/*": ["./src/*"],
+      "Stores": ["./src/state/stores.ts"],
+      "Atoms": ["./src/state/atoms.ts"],
     },
 
     /* Linting */

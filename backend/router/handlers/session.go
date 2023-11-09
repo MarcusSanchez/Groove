@@ -51,3 +51,9 @@ func Logout(c *fiber.Ctx) error {
 	response := actions.Logout(c)
 	return response
 }
+
+func Authenticate(c *fiber.Ctx) error {
+	// csrf/authorization was handled via middleware
+	response := actions.Authenticate(c)
+	return response
+}

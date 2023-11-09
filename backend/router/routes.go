@@ -7,13 +7,17 @@ import (
 )
 
 func Start(app fiber.Router) {
-	app.Get("/health", func(c *fiber.Ctx) error {
-		return c.Status(200).SendString("OK")
-	})
+	// catch-all route for the frontend.
+	app.Get("*", handlers.ReactServer)
+
+	/** api endpoints **/
+	api := app.Group("/api")
+	api.Get("/health", handlers.Health)
 
 	/** session endpoints **/
-	app.Post("/register", middleware.RedirectAuthorized, handlers.Register)
-	app.Post("/login", middleware.RedirectAuthorized, handlers.Login)
-	app.Post("/logout", middleware.CheckCSRF, handlers.Logout)
+	api.Post("/register", middleware.RedirectAuthorized, handlers.Register)
+	api.Post("/login", middleware.RedirectAuthorized, handlers.Login)
+	api.Post("/logout", middleware.CheckCSRF, handlers.Logout)
+	api.Post("/Authenticate", middleware.CheckCSRF, handlers.Authenticate)
 
 }

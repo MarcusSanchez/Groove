@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.Shadow {
+  box-shadow: 0 0 12px 0 black;
+}
+
+.BOBorder {
+  @apply border-b-BrandBlue border-r-BrandBlue border-l-BrandOrange border-t-BrandOrange
+}
+
+.OBBorder {
+  @apply border-b-BrandOrange border-r-BrandOrange border-l-BrandBlue border-t-BrandBlue
+}

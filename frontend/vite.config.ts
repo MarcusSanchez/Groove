@@ -8,7 +8,20 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      'Stores': path.resolve(__dirname, './src/stores.ts'),
+      'Stores': path.resolve(__dirname, './src/state/stores.ts'),
+      'Atoms': path.resolve(__dirname, './src/state/atoms.ts'),
     }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000/api',
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
+  },
+  build: {
+    outDir: '../backend/public',
+    emptyOutDir: true,
   }
 })

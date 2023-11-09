@@ -20,6 +20,7 @@ var client, ctx = db.Instance()
 
 // Attach attaches the middleware that run on all endpoints.
 func Attach(app *fiber.App) {
+	app.Static("/", "./public")
 	app.Use(logger.New())
 	// if the server were to crash, this would restart the server.
 	app.Use(recovery.New())
@@ -64,7 +65,7 @@ func RedirectAuthorized(c *fiber.Ctx) error {
 		return c.Next()
 	}
 
-	return c.Status(fiber.StatusPermanentRedirect).Redirect(c.Hostname() + "/")
+	return c.SendStatus(fiber.StatusPermanentRedirect)
 }
 
 // AuthorizeAny authorizes the user if the Authorization cookie is set and valid (no permissions necessary).

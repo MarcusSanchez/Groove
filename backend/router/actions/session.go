@@ -16,6 +16,13 @@ import (
 // returns a 400 if the username or email is already taken.
 // returns a 201 if the user and session are created.
 func Register(c *fiber.Ctx, password, username, email string) error {
+
+	// validate user input in order to prevent unnecessary database calls.
+	isValid := db.ValidateUser(username, email, password)
+	if isValid != "" {
+		return badRequest(c, isValid)
+	}
+
 	// check if the username is already taken.
 	exists, err := client.User.
 		Query().
@@ -43,21 +50,17 @@ func Register(c *fiber.Ctx, password, username, email string) error {
 	// reassign password to the hashed and salted version.
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
-		logError("Register", "encrypt password", err)
-		return c.Status(500).SendString("A encryption error occurred")
+		logError("Register", "hash password", err)
+		return c.Status(500).SendString("an error occurred")
 	}
-	password = string(hashedPassword)
 
 	// create and save the user.
 	user, err := client.User.Create().
 		SetEmail(email).
-		SetPassword(password).
+		SetPassword(string(hashedPassword)).
 		SetUsername(username).
 		Save(ctx)
-	if ent.IsValidationError(err) {
-		// invalid username or email was provided.
-		return badRequest(c, db.ValidateUser(username, email))
-	} else if err != nil {
+	if err != nil {
 		logError("Register", "create user", err)
 		return internalServerError(c, "error creating user")
 	}
@@ -174,7 +177,10 @@ func Login(c *fiber.Ctx, username, password string) error {
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"acknowledged": true,
-		"message":      "user " + username + " logged in",
+		"user": fiber.Map{
+			"username": user.Username,
+			"email":    user.Email,
+		},
 	})
 }
 
@@ -194,4 +200,54 @@ func Logout(c *fiber.Ctx) error {
 	c.ClearCookie("Csrf")
 
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+// Authenticate resets the session expiration and returns the user's username and email.
+// returns a 200 if the session is updated.
+// returns a 401 (CheckCSRF) if unauthorized.
+// returns a 403 (CheckCSRF) if the CSRF token is invalid.
+// returns a 500 if the session cannot be updated.
+func Authenticate(c *fiber.Ctx) error {
+	session := c.Locals("session").(*ent.Session)
+	user, err := client.User.
+		Query().
+		Where(User.IDEQ(session.UserID)).
+		First(ctx)
+	if err != nil {
+		logError("Authenticate", "check user", err)
+		return internalServerError(c, "error getting account")
+	}
+
+	// refresh expirations.
+	expiration := time.Now().Add(week)
+	_, err = session.Update().SetExpiration(expiration).Save(ctx)
+	if err != nil {
+		logError("Authenticate", "update session", err)
+		return internalServerError(c, "error updating session")
+	}
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "Authorization",
+		Value:    session.Token,
+		Expires:  expiration,
+		HTTPOnly: true,
+		SameSite: env.SameSite,
+		Secure:   env.Secure,
+	})
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "Csrf",
+		Value:    session.Csrf,
+		Expires:  expiration,
+		HTTPOnly: false,
+		SameSite: env.SameSite,
+		Secure:   env.Secure,
+	})
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"user": fiber.Map{
+			"username": user.Username,
+			"email":    user.Email,
+		},
+	})
 }
