@@ -2,6 +2,7 @@ package actions
 
 import (
 	"GrooveGuru/db"
+	"GrooveGuru/env"
 	"github.com/gofiber/fiber/v2"
 	"log"
 	"time"
@@ -19,6 +20,29 @@ func logError(fn, context string, err error) {
 		time.Now().Format("2006-01-02 15:04:05"),
 		fn, context, err.Error(),
 	)
+}
+
+// expireSessionCookies deletes the Authorization and Csrf cookies.
+//
+// This is used over ClearCookie because:
+// Web browsers and other compliant clients will only clear the cookie
+// if the given options are identical to those when creating the cookie
+func expireSessionCookies(c *fiber.Ctx) {
+	c.Cookie(&fiber.Cookie{
+		Name:     "Authorization",
+		Expires:  time.Now().Add(-1 * time.Hour),
+		HTTPOnly: true,
+		SameSite: env.SameSite,
+		Secure:   env.Secure,
+	})
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "Csrf",
+		Expires:  time.Now().Add(-1 * time.Hour),
+		HTTPOnly: false,
+		SameSite: env.SameSite,
+		Secure:   env.Secure,
+	})
 }
 
 func badRequest(c *fiber.Ctx, msg string, code ...int) error {

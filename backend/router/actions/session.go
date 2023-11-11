@@ -13,7 +13,7 @@ import (
 )
 
 // Register creates a new user and session and sets Authorization cookie.
-// returns a 400 if the username or email is already taken.
+// returns a 400 if the username or email is already taken/invalid.
 // returns a 201 if the user and session are created.
 func Register(c *fiber.Ctx, password, username, email string) error {
 
@@ -196,17 +196,12 @@ func Logout(c *fiber.Ctx) error {
 		// they will lose access to their account, and the session background worker will clean it up.
 	}
 
-	c.ClearCookie("Authorization")
-	c.ClearCookie("Csrf")
-
+	expireSessionCookies(c)
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
 // Authenticate resets the session expiration and returns the user's username and email.
 // returns a 200 if the session is updated.
-// returns a 401 (CheckCSRF) if unauthorized.
-// returns a 403 (CheckCSRF) if the CSRF token is invalid.
-// returns a 500 if the session cannot be updated.
 func Authenticate(c *fiber.Ctx) error {
 	session := c.Locals("session").(*ent.Session)
 	user, err := client.User.

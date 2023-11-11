@@ -1,8 +1,9 @@
 import { FormEvent, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { getCookie } from "@/util.ts";
 import { csrfTokenAtom, emailAtom, loggedInAtom, usernameAtom } from "Atoms";
 import { useAtom } from "jotai";
+import { HashLink } from "react-router-hash-link";
 
 function Register() {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ function Register() {
 
   if (loggedIn) navigate("/");
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const register = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     button.current!.disabled = true;
     setError("");
@@ -58,7 +59,7 @@ function Register() {
         setLoggedIn(true);
         setUsername(json.username);
         setEmail(json.email);
-        setCsrfToken(getCookie("Csrf") || ""); // the cookie will be there
+        setCsrfToken(getCookie("Csrf")); // the cookie will be there
         navigate("/");
         break;
       case 308:
@@ -71,8 +72,9 @@ function Register() {
     <>
       <div className="mt-10 mb-5 sm:mx-[20%] mx-[10%] flex justify-center">
         <form
+          id="register-form"
           ref={form}
-          onSubmit={handleSubmit}
+          onSubmit={register}
           className="Shadow w-[400px] min-h-[440px] rounded-2xl border-[1px] BOBorder"
         >
           <div className="mx-10 my-5">
@@ -118,12 +120,13 @@ function Register() {
 
       <p className="text-center font-bold text-base mb-20">
         Already have an account? {" "}
-        <Link
-          to="/login"
+        <HashLink
+          smooth
+          to="/login#top"
           className="underline text-blue-500 hover:text-blue-700 focus:text-blue-900"
         >
           Login
-        </Link>
+        </HashLink>
       </p>
     </>
   );

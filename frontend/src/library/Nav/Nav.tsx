@@ -39,8 +39,9 @@ function Nav() {
   }
 
   return (
-    <nav className="border-y-2 border-b-BrandOrange border-t-BrandBlue
-      flex justify-between content-center sm:mx-[50px] mt-[15px]"
+    <nav
+      className="border-y-2 border-b-BrandOrange border-t-BrandBlue
+      flex justify-between content-center sm:mx-[7%] mt-[15px]"
     >
       <Link to="/">
         <img

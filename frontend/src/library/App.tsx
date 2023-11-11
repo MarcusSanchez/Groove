@@ -6,6 +6,7 @@ import Register from "./Register/Register.tsx";
 import { useEffect } from "react";
 import { getCookie } from "@/util.ts";
 import { useAtom } from "jotai";
+import Footer from "./Footer/Footer.tsx";
 import { csrfTokenAtom, emailAtom, loggedInAtom, usernameAtom } from "Atoms";
 
 function App() {
@@ -16,8 +17,8 @@ function App() {
 
   useEffect(() => {
     (async () => {
-      let csrfToken = getCookie("Csrf")
-      if (csrfToken === undefined) return;
+      let csrfToken = getCookie("Csrf");
+      if (csrfToken === "") return;
 
       let resp = await fetch("/api/authenticate", {
         method: "POST",
@@ -58,6 +59,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
       </Routes>
+      <Footer />
     </BrowserRouter>
   );
 }
