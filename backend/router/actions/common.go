@@ -3,8 +3,8 @@ package actions
 import (
 	"GrooveGuru/db"
 	"GrooveGuru/env"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"log"
 	"time"
 )
 
@@ -15,9 +15,9 @@ const (
 var client, ctx = db.Instance()
 
 func logError(fn, context string, err error) {
-	log.Printf(
-		"[%s] [ERROR] [Function: %s (Context: %s)] %s\n",
-		time.Now().Format("2006-01-02 15:04:05"),
+	fmt.Printf(
+		"%s [ERROR] [Function: %s (Context: %s)] %s\n",
+		time.Now().Format("15:04:05"),
 		fn, context, err.Error(),
 	)
 }

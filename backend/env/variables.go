@@ -7,12 +7,15 @@ import (
 )
 
 var (
-	Port        string
-	IsProd      bool
-	Secure      bool
-	SameSite    string
-	FrontendURL string
-	PgURI       string
+	Port          string
+	IsProd        bool
+	Secure        bool
+	SameSite      string
+	FrontendURL   string
+	BackendURL    string
+	PgURI         string
+	SpotifyClient string
+	SpotifySecret string
 )
 
 func init() {
@@ -34,14 +37,18 @@ func init() {
 	// this is because during development, the frontend and backend are on different ports.
 	SameSite = os.Getenv("SAME_SITE")
 	PgURI = os.Getenv("PG_URI")
+	// (required only for development) used to set CORS.
 	FrontendURL = os.Getenv("FRONTEND_URL")
+	BackendURL = os.Getenv("BACKEND_URL")
+	SpotifyClient = os.Getenv("SPOTIFY_CLIENT")
+	SpotifySecret = os.Getenv("SPOTIFY_SECRET")
 
 	validateVariables()
 }
 
 func validateVariables() {
 	var errors []string
-	variables := []string{"PORT", "PROD", "SECURE", "SAME_SITE", "PG_URI"}
+	variables := []string{"PORT", "PROD", "SECURE", "SAME_SITE", "PG_URI", "SPOTIFY_CLIENT", "SPOTIFY_SECRET", "BACKEND_URL"}
 	for _, variable := range variables {
 		if os.Getenv(variable) == "" {
 			errors = append(errors, variable+" is not set")

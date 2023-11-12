@@ -7,9 +7,6 @@ import (
 )
 
 func Start(app fiber.Router) {
-	// catch-all route for the frontend.
-	app.Get("*", handlers.ReactServer)
-
 	/** api endpoints **/
 	api := app.Group("/api")
 	api.Get("/health", handlers.Health)
@@ -20,4 +17,11 @@ func Start(app fiber.Router) {
 	api.Post("/logout", middleware.CheckCSRF, handlers.Logout)
 	api.Post("/Authenticate", middleware.CheckCSRF, handlers.Authenticate)
 
+	/** spotify-link endpoints **/
+	api.Post("/spotify/link", middleware.CheckCSRF, middleware.RedirectLinked, handlers.SpotifyLink)
+	api.Get("/spotify/callback", middleware.AuthorizeAny, handlers.SpotifyCallback)
+
+	// catch-all route for the frontend.
+	// placed after all other routes to prevent conflicts.
+	app.Get("*", handlers.ReactServer)
 }

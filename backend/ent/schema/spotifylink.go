@@ -17,6 +17,7 @@ func (SpotifyLink) Fields() []ent.Field {
 		field.Int("id").Immutable(),
 		field.Int("user_id").Unique(),
 		field.String("access_token"),
+		field.Time("access_token_expiration"),
 		field.String("refresh_token"),
 	}
 }

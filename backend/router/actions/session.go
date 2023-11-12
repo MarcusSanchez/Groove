@@ -3,6 +3,7 @@ package actions
 import (
 	"GrooveGuru/db"
 	"GrooveGuru/ent"
+	SpotifyLink "GrooveGuru/ent/spotifylink"
 	User "GrooveGuru/ent/user"
 	"GrooveGuru/env"
 	"errors"
@@ -200,10 +201,11 @@ func Logout(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-// Authenticate resets the session expiration and returns the user's username and email.
+// Authenticate resets the session expiration and returns the user's username, email, and status for spotify link.
 // returns a 200 if the session is updated.
 func Authenticate(c *fiber.Ctx) error {
 	session := c.Locals("session").(*ent.Session)
+
 	user, err := client.User.
 		Query().
 		Where(User.IDEQ(session.UserID)).
@@ -239,10 +241,21 @@ func Authenticate(c *fiber.Ctx) error {
 		Secure:   env.Secure,
 	})
 
+	// check for spotify link.
+	exists, err := client.SpotifyLink.
+		Query().
+		Where(SpotifyLink.UserIDEQ(session.UserID)).
+		Exist(ctx)
+	if err != nil {
+		logError("Authenticate", "check spotify link", err)
+		return internalServerError(c, "error checking spotify account")
+	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"user": fiber.Map{
 			"username": user.Username,
 			"email":    user.Email,
+			"spotify":  exists,
 		},
 	})
 }

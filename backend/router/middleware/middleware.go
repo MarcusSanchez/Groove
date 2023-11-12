@@ -4,14 +4,15 @@ import (
 	"GrooveGuru/db"
 	"GrooveGuru/ent"
 	Session "GrooveGuru/ent/session"
+	SpotifyLink "GrooveGuru/ent/spotifylink"
 	"GrooveGuru/env"
 	"errors"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	recovery "github.com/gofiber/fiber/v2/middleware/recover"
-	"log"
 	"strconv"
 	"time"
 )
@@ -95,6 +96,26 @@ func AuthorizeAny(c *fiber.Ctx) error {
 	return c.Next()
 }
 
+// RedirectLinked redirects to the home page if the user is already linked to spotify.
+// Useful for instances where the user should not be linked to spotify.
+// i.e. spotify link page.
+//
+// NOTE: this middleware is meant to be used after with AuthorizeAny or CheckCSRF to retrieve session.
+func RedirectLinked(c *fiber.Ctx) error {
+	session := c.Locals("session").(*ent.Session)
+
+	// check if a link already exists.
+	exists, err := client.SpotifyLink.Query().Where(SpotifyLink.UserIDEQ(session.UserID)).Exist(ctx)
+	if err != nil {
+		logError("RedirectLinked[MIDDLEWARE]", "checking spotify link", err)
+		return c.Status(fiber.StatusInternalServerError).SendString("error while authorizing")
+	} else if !exists {
+		return c.Next()
+	}
+
+	return c.SendStatus(fiber.StatusPermanentRedirect)
+}
+
 // CheckCSRF checks if the Csrf token in the body matches the one in the session.
 // for use of endpoints where the user needs to be logged in and the request needs to be verified.
 // i.e. actions with side effects (creating, updating, deleting, etc...)
@@ -157,9 +178,9 @@ func unauthorized(c *fiber.Ctx) error {
 }
 
 func logError(fn, context string, err error) {
-	log.Printf(
-		"[%s] [ERROR] [Function: %s (Context: %s)] %s\n",
-		time.Now().Format("2006-01-02 15:04:05"),
+	fmt.Printf(
+		"%s [ERROR] [Function: %s (Context: %s)] %s\n",
+		time.Now().Format("15:04:05"),
 		fn, context, err.Error(),
 	)
 }
@@ -168,7 +189,7 @@ func logError(fn, context string, err error) {
 //
 // This is used over ClearCookie because:
 // Web browsers and other compliant clients will only clear the cookie
-// if the given options are identical to those when creating the cookie
+// if the given options are identical to those when creating the cookie.
 func expireSessionCookies(c *fiber.Ctx) {
 	c.Cookie(&fiber.Cookie{
 		Name:     "Authorization",
