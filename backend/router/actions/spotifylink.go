@@ -2,6 +2,7 @@ package actions
 
 import (
 	"GrooveGuru/ent"
+	OAuthState "GrooveGuru/ent/oauthstate"
 	"GrooveGuru/env"
 	"encoding/base64"
 	"encoding/json"
@@ -37,18 +38,31 @@ type (
 // LinkSpotify creates a SpotifyLink and sends Spotify
 // Authorization page that the client will redirect the user to.
 func LinkSpotify(c *fiber.Ctx) error {
+	session := c.Locals("session").(*ent.Session)
+
 	// generate a random 16 character string for the state parameter.
 	state := strings.ReplaceAll(uuid.New().String(), "-", "")[:16]
 
-	// set state in cookie for later verification.
-	c.Cookie(&fiber.Cookie{
-		Name:     "State",
-		Value:    state,
-		Expires:  time.Now().Add(30 * time.Minute),
-		HTTPOnly: true,
-		SameSite: env.SameSite,
-		Secure:   env.Secure,
-	})
+	// invalidate any previous state for this user.
+	_, err := client.OAuthState.
+		Delete().
+		Where(OAuthState.UserIDEQ(session.UserID)).
+		Exec(ctx)
+	if err != nil {
+		logError("LinkSpotify", "Checking state", err)
+		return internalServerError(c, "error linking spotify")
+	}
+
+	// set state in OAuth-Store for later verification.
+	_, err = client.OAuthState.Create().
+		SetState(state).
+		SetExpiration(time.Now().Add(30 * time.Minute)).
+		SetUserID(session.UserID).
+		Save(ctx)
+	if err != nil {
+		logError("LinkSpotify", "Creating OAuthState", err)
+		return internalServerError(c, "error linking spotify")
+	}
 
 	baseURL, _ := url.Parse("https://accounts.spotify.com/authorize")
 	qParams := url.Values{
@@ -68,18 +82,37 @@ func SpotifyCallback(c *fiber.Ctx, code, state string) error {
 	session := c.Locals("session").(*ent.Session)
 
 	// verify state to prevent CSRF.
-	cookie := c.Cookies("State")
-	if cookie == "" {
-		return c.Status(fiber.StatusUnauthorized).SendString("Invalid access")
-	} else if cookie != state {
+	storedState, err := client.OAuthState.
+		Query().
+		Where(OAuthState.UserIDEQ(session.UserID)).
+		First(ctx)
+	if ent.IsNotFound(err) {
+		return unauthorized(c, "unidentified state")
+	} else if err != nil {
+		logError("SpotifyCallback", "Checking state", err)
+		return internalServerError(c, "error linking spotify")
+	}
+
+	if storedState.Expiration.Before(time.Now()) {
+		return unauthorized(c, "expired state")
+	}
+
+	// check if state matches.
+	if storedState.State != state {
 		logError(
 			"SpotifyCallback",
-			"Attempted CSRF",
+			"Potential CSRF Attempt",
 			errors.New("state mismatch for user: "+strconv.Itoa(session.UserID)),
 		)
-		return c.Status(fiber.StatusForbidden).SendString("state mismatch")
+		return forbidden(c, "state mismatch")
 	}
-	expireStateCookie(c)
+
+	// clear state from store
+	err = client.OAuthState.DeleteOne(storedState).Exec(ctx)
+	if err != nil {
+		// no need to alert client. background worker will handle it.
+		logError("SpotifyCallback", "Deleting state", err)
+	}
 
 	// create base64 encoded string of client id and secret. (as per spotify docs)
 	credentials := env.SpotifyClient + ":" + env.SpotifySecret
@@ -114,7 +147,7 @@ func SpotifyCallback(c *fiber.Ctx, code, state string) error {
 		return internalServerError(c, "error unmarshalling token")
 	}
 
-	// save access token and refresh token as LinkSpotify.
+	// save access token and refresh token as SpotifyLink.
 	_, err = client.SpotifyLink.Create().
 		SetAccessToken(payload.AccessToken).
 		// Spotify's Access-Token expire after 1 hour, so we set the expiration to 58 minutes to be safe.
@@ -130,22 +163,5 @@ func SpotifyCallback(c *fiber.Ctx, code, state string) error {
 	return c.Status(201).JSON(fiber.Map{
 		"acknowledged": true,
 		"message":      "Spotify linked",
-	})
-}
-
-/** helpers **/
-
-// expireStateCookie deletes the OAuth state cookie.
-//
-// This is used over ClearCookie because:
-// Web browsers and other compliant clients will only clear the cookie
-// if the given options are identical to those when creating the cookie.
-func expireStateCookie(c *fiber.Ctx) {
-	c.Cookie(&fiber.Cookie{
-		Name:     "State",
-		Expires:  time.Now().Add(-1 * time.Hour),
-		HTTPOnly: true,
-		SameSite: env.SameSite,
-		Secure:   env.Secure,
 	})
 }

@@ -36,5 +36,9 @@ func (User) Edges() []ent.Edge {
 		edge.To("session", Session.Type).
 			// When User is deleted, cascade Session referencing it.
 			Annotations(entsql.OnDelete(entsql.Cascade)),
+		// O2O User <--> OAuthState(optional)
+		edge.To("oauth_state", OAuthState.Type).Unique().
+			// When User is deleted, cascade State referencing it.
+			Annotations(entsql.OnDelete(entsql.Cascade)),
 	}
 }

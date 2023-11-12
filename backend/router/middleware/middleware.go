@@ -157,7 +157,7 @@ func CheckCSRF(c *fiber.Ctx) error {
 		// request was forged.
 		logError(
 			"CheckCSRF[MIDDLEWARE]",
-			"Attempted CSRF",
+			"Potential CSRF Attempt",
 			errors.New("csrf token mismatch for user: "+strconv.Itoa(session.UserID)),
 		)
 		return forbiddened(c)

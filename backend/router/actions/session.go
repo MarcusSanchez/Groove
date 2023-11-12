@@ -5,7 +5,6 @@ import (
 	"GrooveGuru/ent"
 	SpotifyLink "GrooveGuru/ent/spotifylink"
 	User "GrooveGuru/ent/user"
-	"GrooveGuru/env"
 	"errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -82,26 +81,7 @@ func Register(c *fiber.Ctx, password, username, email string) error {
 		return internalServerError(c, "error creating session")
 	}
 
-	c.Cookie(&fiber.Cookie{
-		Name:     "Authorization",
-		Value:    token,
-		Expires:  expiration,
-		HTTPOnly: true,
-		SameSite: env.SameSite,
-		Secure:   env.Secure,
-	})
-
-	c.Cookie(&fiber.Cookie{
-		Name:    "Csrf",
-		Value:   csrf,
-		Expires: expiration,
-		// HttpOnly is set to false because the frontend needs to access it.
-		// This isn't a security risk because the cookie is for CSRF protection;
-		// If XSS is present, the attacker can already do anything they want.
-		HTTPOnly: false,
-		SameSite: env.SameSite,
-		Secure:   env.Secure,
-	})
+	setSessionCookies(c, token, csrf, expiration)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"acknowledged": true,
@@ -155,26 +135,7 @@ func Login(c *fiber.Ctx, username, password string) error {
 		return internalServerError(c, "error creating session")
 	}
 
-	c.Cookie(&fiber.Cookie{
-		Name:     "Authorization",
-		Value:    token,
-		Expires:  expiration,
-		HTTPOnly: true,
-		SameSite: env.SameSite,
-		Secure:   env.Secure,
-	})
-
-	c.Cookie(&fiber.Cookie{
-		Name:    "Csrf",
-		Value:   csrf,
-		Expires: expiration,
-		// HttpOnly is set to false because the frontend needs to access it.
-		// This isn't a security risk because the cookie is for CSRF protection;
-		// If XSS is present, the attacker can already do anything they want.
-		HTTPOnly: false,
-		SameSite: env.SameSite,
-		Secure:   env.Secure,
-	})
+	setSessionCookies(c, token, csrf, expiration)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"acknowledged": true,
@@ -223,23 +184,8 @@ func Authenticate(c *fiber.Ctx) error {
 		return internalServerError(c, "error updating session")
 	}
 
-	c.Cookie(&fiber.Cookie{
-		Name:     "Authorization",
-		Value:    session.Token,
-		Expires:  expiration,
-		HTTPOnly: true,
-		SameSite: env.SameSite,
-		Secure:   env.Secure,
-	})
-
-	c.Cookie(&fiber.Cookie{
-		Name:     "Csrf",
-		Value:    session.Csrf,
-		Expires:  expiration,
-		HTTPOnly: false,
-		SameSite: env.SameSite,
-		Secure:   env.Secure,
-	})
+	// refresh cookie expiration with same values.
+	setSessionCookies(c, session.Token, session.Csrf, expiration)
 
 	// check for spotify link.
 	exists, err := client.SpotifyLink.

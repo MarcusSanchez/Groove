@@ -19,6 +19,7 @@ func init() {
 	}
 
 	go SpawnSessionCleaner()
+	go SpawnOAuthStoreCleaner()
 }
 
 func Migrations() {

@@ -15,7 +15,7 @@ func Start(app fiber.Router) {
 	api.Post("/register", middleware.RedirectAuthorized, handlers.Register)
 	api.Post("/login", middleware.RedirectAuthorized, handlers.Login)
 	api.Post("/logout", middleware.CheckCSRF, handlers.Logout)
-	api.Post("/Authenticate", middleware.CheckCSRF, handlers.Authenticate)
+	api.Post("/authenticate", middleware.CheckCSRF, handlers.Authenticate)
 
 	/** spotify-link endpoints **/
 	api.Post("/spotify/link", middleware.CheckCSRF, middleware.RedirectLinked, handlers.SpotifyLink)
