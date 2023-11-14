@@ -6,22 +6,34 @@ import (
 	Session "GrooveGuru/ent/session"
 	SpotifyLink "GrooveGuru/ent/spotifylink"
 	"GrooveGuru/env"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	recovery "github.com/gofiber/fiber/v2/middleware/recover"
+	"net/url"
 	"strconv"
 	"time"
 )
 
 var client, ctx = db.Instance()
 
+type (
+	form    map[string]string
+	headers map[string]string
+	params  map[string]string
+)
+
 // Attach attaches the middleware that run on all endpoints.
 func Attach(app *fiber.App) {
 	app.Static("/", "./public")
+	// catch-all route for the frontend.
+	app.Use("/", ReactServer)
 	app.Use(logger.New())
 	// if the server were to crash, this would restart the server.
 	app.Use(recovery.New())
@@ -167,6 +179,96 @@ func CheckCSRF(c *fiber.Ctx) error {
 	return c.Next()
 }
 
+// SetAccess sets the access token for the spotify client.
+// if user is linked to spotify, the access token will be theirs;
+// otherwise, the access token will be the default token.
+func SetAccess(c *fiber.Ctx) error {
+	session := c.Locals("session").(*ent.Session)
+
+	// check if a link already exists.
+	link, err := client.SpotifyLink.
+		Query().
+		Where(SpotifyLink.UserIDEQ(session.UserID)).
+		First(ctx)
+	if ent.IsNotFound(err) {
+		link, err = defaultAccessToken()
+		if err != nil {
+			logError("SetAccess[MIDDLEWARE]", "getting default access token", err)
+			return c.Status(fiber.StatusInternalServerError).SendString("error while authorizing")
+		}
+	} else if err != nil {
+		logError("SetAccess[MIDDLEWARE]", "checking spotify link", err)
+		return c.Status(fiber.StatusInternalServerError).SendString("error while authorizing")
+	}
+
+	// if the link hasn't expired, we can use it.
+	if !link.AccessTokenExpiration.Before(time.Now()) {
+		c.Locals("access", link.AccessToken)
+		return c.Next()
+	}
+
+	// otherwise, we need to refresh the token.
+	credentials := env.SpotifyClient + ":" + env.SpotifySecret
+	encodedCredentials := base64.StdEncoding.EncodeToString([]byte(credentials))
+
+	http := resty.New()
+	resp, err := http.R().
+		SetHeaders(headers{
+			"Content-Type":  "application/x-www-form-urlencoded",
+			"Authorization": "Basic " + encodedCredentials,
+		}).
+		SetBody(urlSearchParams(params{
+			"grant_type":    "refresh_token",
+			"refresh_token": link.RefreshToken,
+		})).
+		Post("https://accounts.spotify.com/api/token")
+	if err != nil {
+		logError("SetAccess[MIDDLEWARE]", "refreshing token", err)
+		return c.Status(fiber.StatusInternalServerError).SendString("error while authorizing")
+	}
+
+	if resp.StatusCode() != 200 {
+		logError(
+			"SetAccess[MIDDLEWARE]",
+			"refreshing token",
+			errors.New(fmt.Sprintln(resp.StatusCode(), ", ", string(resp.Body()))),
+		)
+		return c.Status(fiber.StatusInternalServerError).SendString("error while authorizing")
+	}
+
+	type TokenResponse struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+	}
+
+	payload := TokenResponse{}
+	if json.Unmarshal(resp.Body(), &payload) != nil {
+		logError("SetAccess[MIDDLEWARE]", "unmarshalling token", err)
+		return c.Status(fiber.StatusInternalServerError).SendString("error while authorizing")
+	}
+
+	if payload.RefreshToken == "" {
+		payload.RefreshToken = link.RefreshToken
+	}
+
+	// update link with new access and refresh tokens.
+	_, err = client.SpotifyLink.UpdateOne(link).
+		SetAccessToken(payload.AccessToken).
+		SetRefreshToken(payload.RefreshToken).
+		SetAccessTokenExpiration(time.Now().Add(58 * time.Minute)).
+		Save(ctx)
+	if ent.IsValidationError(err) {
+		logError("SetAccess[MIDDLEWARE]", "updating spotify link (validation)", err)
+		return c.Status(fiber.StatusInternalServerError).SendString("error while authorizing")
+	} else if err != nil {
+		logError("SetAccess[MIDDLEWARE]", "updating spotify link", err)
+		return c.Status(fiber.StatusInternalServerError).SendString("error while authorizing")
+	}
+
+	c.Locals("access", payload.AccessToken)
+	return c.Next()
+}
+
 /** Helpers **/
 
 func forbiddened(c *fiber.Ctx) error {
@@ -206,4 +308,36 @@ func expireSessionCookies(c *fiber.Ctx) {
 		SameSite: env.SameSite,
 		Secure:   env.Secure,
 	})
+}
+
+func urlSearchParams(params map[string]string) string {
+	qParams := url.Values{}
+	for key, value := range params {
+		qParams.Add(key, value)
+	}
+	return qParams.Encode()
+}
+
+func defaultAccessToken() (*ent.SpotifyLink, error) {
+	link, err := client.SpotifyLink.
+		Query().
+		Where(SpotifyLink.UserIDEQ(1)).
+		First(ctx)
+	if ent.IsNotFound(err) {
+		panic("default access token not found")
+	} else if err != nil {
+		return nil, err
+	}
+
+	return link, err
+}
+
+// ReactServer serves the frontend.
+// this is used for the catch-all route.
+// if route starts with /api, it will not be served by this function.
+func ReactServer(c *fiber.Ctx) error {
+	if c.Path()[:4] == "/api" {
+		return c.Next()
+	}
+	return c.SendFile("./public/index.html")
 }

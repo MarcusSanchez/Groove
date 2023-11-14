@@ -5,7 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SpotifyLink(c *fiber.Ctx) error {
+func LinkSpotify(c *fiber.Ctx) error {
 	response := actions.LinkSpotify(c)
 	return response
 }
@@ -27,5 +27,10 @@ func SpotifyCallback(c *fiber.Ctx) error {
 		query.Code,
 		query.State,
 	)
+	return response
+}
+
+func UnlinkSpotify(c *fiber.Ctx) error {
+	response := actions.UnlinkSpotify(c)
 	return response
 }

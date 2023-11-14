@@ -3,6 +3,7 @@ package actions
 import (
 	"GrooveGuru/ent"
 	OAuthState "GrooveGuru/ent/oauthstate"
+	SpotifyLink "GrooveGuru/ent/spotifylink"
 	"GrooveGuru/env"
 	"encoding/base64"
 	"encoding/json"
@@ -29,14 +30,14 @@ var (
 )
 
 type (
-	param   []string
-	body    map[string]any
+	params  map[string]string
 	form    map[string]string
 	headers map[string]string
 )
 
 // LinkSpotify creates a SpotifyLink and sends Spotify
 // Authorization page that the client will redirect the user to.
+// Returns 200 if successful.
 func LinkSpotify(c *fiber.Ctx) error {
 	session := c.Locals("session").(*ent.Session)
 
@@ -65,19 +66,22 @@ func LinkSpotify(c *fiber.Ctx) error {
 	}
 
 	baseURL, _ := url.Parse("https://accounts.spotify.com/authorize")
-	qParams := url.Values{
-		"response_type": param{"code"},
-		"client_id":     param{env.SpotifyClient},
-		"scope":         param{strings.Join(scope, " ")},
-		"redirect_uri":  param{env.BackendURL + "/api/spotify/callback"},
-		"state":         param{state},
-		"access_type":   param{accessType},
-	}
-	baseURL.RawQuery = qParams.Encode()
+	baseURL.RawQuery = urlSearchParams(params{
+		"response_type": "code",
+		"client_id":     env.SpotifyClient,
+		"scope":         strings.Join(scope, " "),
+		"redirect_uri":  env.BackendURL + "/api/spotify/callback",
+		"state":         state,
+		"access_type":   accessType,
+	})
 
 	return c.Status(200).SendString(baseURL.String())
 }
 
+// SpotifyCallback handles the redirect from the Spotify Authorization page.
+// It verifies the state and retrieves the access token and refresh token using the code.
+// It then saves the tokens as a SpotifyLink, successfully linking Groove and Spotify accounts.
+// Returns 201 if successful.
 func SpotifyCallback(c *fiber.Ctx, code, state string) error {
 	session := c.Locals("session").(*ent.Session)
 
@@ -133,7 +137,7 @@ func SpotifyCallback(c *fiber.Ctx, code, state string) error {
 		Post("https://accounts.spotify.com/api/token")
 	if err != nil {
 		logError("SpotifyCallback", "Requesting token", err)
-		return c.Status(500).SendString("error requesting token")
+		return internalServerError(c, "error requesting token")
 	}
 
 	type TokenResponse struct {
@@ -164,4 +168,41 @@ func SpotifyCallback(c *fiber.Ctx, code, state string) error {
 		"acknowledged": true,
 		"message":      "Spotify linked",
 	})
+}
+
+// UnlinkSpotify deletes the SpotifyLink for the user.
+// Returns 204 no content if successful.
+func UnlinkSpotify(c *fiber.Ctx) error {
+	session := c.Locals("session").(*ent.Session)
+
+	// check if user has a spotify link.
+	link, err := client.SpotifyLink.
+		Query().
+		Where(SpotifyLink.UserIDEQ(session.UserID)).
+		First(ctx)
+	if ent.IsNotFound(err) {
+		return unauthorized(c, "account not linked")
+	} else if err != nil {
+		logError("UnlinkSpotify", "Checking spotify link", err)
+		return internalServerError(c, "error unlinking spotify")
+	}
+
+	// delete spotify link.
+	err = client.SpotifyLink.DeleteOne(link).Exec(ctx)
+	if err != nil {
+		logError("UnlinkSpotify", "Deleting spotify link", err)
+		return internalServerError(c, "error unlinking spotify")
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
+/** helpers **/
+
+func urlSearchParams(params map[string]string) string {
+	qParams := url.Values{}
+	for key, value := range params {
+		qParams.Add(key, value)
+	}
+	return qParams.Encode()
 }

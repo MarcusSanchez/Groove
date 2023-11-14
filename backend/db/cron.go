@@ -4,7 +4,6 @@ import (
 	OAuthState "GrooveGuru/ent/oauthstate"
 	Session "GrooveGuru/ent/session"
 	"fmt"
-	"log"
 	"time"
 )
 
@@ -24,9 +23,9 @@ func SpawnSessionCleaner() {
 		if err != nil {
 			logError("SessionCleaner[CRON]", "Worker", err)
 		} else {
-			log.Printf(
+			fmt.Printf(
 				"[%s] [SUCCESS] Session Cleared (affected: %d)\n",
-				time.Now().Format("2006-01-02 15:04:05"),
+				time.Now().Format("15:04:05"),
 				affected,
 			)
 		}
@@ -46,9 +45,9 @@ func SpawnOAuthStoreCleaner() {
 		if err != nil {
 			logError("OAuthStoreCleaner[CRON]", "Worker", err)
 		} else {
-			log.Printf(
-				"[%s] [SUCCESS] OAuthStore Cleared (affected: %d)\n",
-				time.Now().Format("2006-01-02 15:04:05"),
+			fmt.Printf(
+				"%s [SUCCESS] OAuthStore Cleared (affected: %d)\n",
+				time.Now().Format("15:04:05"),
 				affected,
 			)
 		}

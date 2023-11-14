@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func Start(app fiber.Router) {
+func Start(app *fiber.App) {
 	/** api endpoints **/
 	api := app.Group("/api")
 	api.Get("/health", handlers.Health)
@@ -18,10 +18,24 @@ func Start(app fiber.Router) {
 	api.Post("/authenticate", middleware.CheckCSRF, handlers.Authenticate)
 
 	/** spotify-link endpoints **/
-	api.Post("/spotify/link", middleware.CheckCSRF, middleware.RedirectLinked, handlers.SpotifyLink)
-	api.Get("/spotify/callback", middleware.AuthorizeAny, handlers.SpotifyCallback)
+	spotify := api.Group("/spotify")
+	spotify.Post("/link", middleware.CheckCSRF, middleware.RedirectLinked, handlers.LinkSpotify)
+	spotify.Get("/callback", middleware.AuthorizeAny, handlers.SpotifyCallback)
+	spotify.Post("/unlink", middleware.CheckCSRF, handlers.UnlinkSpotify)
 
-	// catch-all route for the frontend.
-	// placed after all other routes to prevent conflicts.
-	app.Get("*", handlers.ReactServer)
+	/** spotify-artist endpoints **/
+	artists := spotify.Group("/artists")
+	artists.Get("/:id", middleware.AuthorizeAny, middleware.SetAccess, handlers.GetArtist)
+	artists.Get("/:id/related-artists", middleware.AuthorizeAny, middleware.SetAccess, handlers.GetRelatedArtists)
+	artists.Get("/:id/top-tracks", middleware.AuthorizeAny, middleware.SetAccess, handlers.GetArtistTopTracks)
+	artists.Get("/:id/albums", middleware.AuthorizeAny, middleware.SetAccess, handlers.GetArtistAlbums)
+
+	/** spotify-album endpoints **/
+	albums := spotify.Group("/albums")
+	albums.Get("/:id", middleware.AuthorizeAny, middleware.SetAccess, handlers.GetAlbum)
+	albums.Get("/:id/tracks", middleware.AuthorizeAny, middleware.SetAccess, handlers.GetAlbumTracks)
+
+	/** spotify-artist endpoints **/
+	tracks := spotify.Group("/tracks")
+	tracks.Get("/:id", middleware.AuthorizeAny, middleware.SetAccess, handlers.GetTrack)
 }
