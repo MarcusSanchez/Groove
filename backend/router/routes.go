@@ -35,7 +35,11 @@ func Start(app *fiber.App) {
 	albums.Get("/:id", middleware.AuthorizeAny, middleware.SetAccess, handlers.GetAlbum)
 	albums.Get("/:id/tracks", middleware.AuthorizeAny, middleware.SetAccess, handlers.GetAlbumTracks)
 
-	/** spotify-artist endpoints **/
+	/** spotify-tracks endpoints **/
 	tracks := spotify.Group("/tracks")
 	tracks.Get("/:id", middleware.AuthorizeAny, middleware.SetAccess, handlers.GetTrack)
+
+	/** spotify-search endpoints **/
+	search := spotify.Group("/search")
+	search.Get("/:query", middleware.AuthorizeAny, middleware.SetAccess, handlers.Search)
 }

@@ -51,6 +51,17 @@ func Attach(app *fiber.App) {
 	}
 }
 
+// ReactServer serves the frontend.
+// this is used for the catch-all route.
+// if route starts with /api, it will not be served by this function.
+func ReactServer(c *fiber.Ctx) error {
+	path := c.Path()
+	if len(path) > 4 && path[:4] == "/api" {
+		return c.Next()
+	}
+	return c.SendFile("./public/index.html")
+}
+
 // RedirectAuthorized redirects to the home page if the user is authorized.
 // Useful for instances where the user should not be logged-in/authenticated.
 // i.e. login and register pages.
@@ -185,12 +196,13 @@ func CheckCSRF(c *fiber.Ctx) error {
 func SetAccess(c *fiber.Ctx) error {
 	session := c.Locals("session").(*ent.Session)
 
-	// check if a link already exists.
+	// check if the user is linked to spotify, if so, use their access token.
 	link, err := client.SpotifyLink.
 		Query().
 		Where(SpotifyLink.UserIDEQ(session.UserID)).
 		First(ctx)
 	if ent.IsNotFound(err) {
+		// if not, use the default access token.
 		link, err = defaultAccessToken()
 		if err != nil {
 			logError("SetAccess[MIDDLEWARE]", "getting default access token", err)
@@ -330,14 +342,4 @@ func defaultAccessToken() (*ent.SpotifyLink, error) {
 	}
 
 	return link, err
-}
-
-// ReactServer serves the frontend.
-// this is used for the catch-all route.
-// if route starts with /api, it will not be served by this function.
-func ReactServer(c *fiber.Ctx) error {
-	if c.Path()[:4] == "/api" {
-		return c.Next()
-	}
-	return c.SendFile("./public/index.html")
 }

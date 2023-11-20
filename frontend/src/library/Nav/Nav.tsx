@@ -69,13 +69,22 @@ function Nav() {
           </>
         }
         {loggedIn &&
-          <button
-            onClick={handleLogout}
-            className="bg-white text-black px-4 py-2 rounded-xl BOBorder font-bold border-2
-            hover:border-brandTeal focus:outline-none hover:ring-2 focus:border-black hover:ring-opacity-50"
-          >
-            Logout
-          </button>
+          <>
+            <Link
+              to="/dashboard"
+              className="bg-white text-black px-4 py-2 rounded-xl BOBorder font-bold border-2
+              hover:border-brandTeal focus:outline-none hover:ring-2 focus:border-black hover:ring-opacity-50"
+            >
+              Dashboard
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="bg-white text-black px-4 py-2 rounded-xl BOBorder font-bold border-2
+              hover:border-brandTeal focus:outline-none hover:ring-2 focus:border-black hover:ring-opacity-50"
+            >
+              Logout
+            </button>
+          </>
         }
       </div>
     </nav>

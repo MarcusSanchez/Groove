@@ -46,7 +46,7 @@ func albumRequest(c *fiber.Ctx, endpoint, access string) (*resty.Response, error
 		}).
 		Get("https://api.spotify.com/v1" + endpoint)
 	if err != nil {
-		logError("trackRequest", "Requesting "+endpoint, err)
+		logError("albumRequest", "Requesting "+endpoint, err)
 		return nil, internalServerError(c, "error requesting "+c.Path())
 	}
 
@@ -65,7 +65,7 @@ func albumResponse(c *fiber.Ctx, resp *resty.Response) error {
 		return c.Status(200).JSON(data)
 	default:
 		logError(
-			"trackResponse",
+			"albumResponse",
 			"Requesting "+resp.Request.URL,
 			errors.New(fmt.Sprintln(resp.StatusCode(), ", ", string(resp.Body()))),
 		)
