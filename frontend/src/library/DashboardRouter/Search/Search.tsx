@@ -65,6 +65,7 @@ function Search() {
   const artists = useRef<HTMLInputElement>(null);
   const tracks = useRef<HTMLInputElement>(null);
   const searchbar = useRef<HTMLInputElement>(null);
+  const searchButton = useRef<HTMLButtonElement>(null);
 
   const navigate = useNavigate();
   const redirect = (id: string, type: SearchType) => {
@@ -96,13 +97,21 @@ function Search() {
     let url = new URL(window.location.href);
     url.searchParams.set("q", q);
     url.searchParams.set("type", type);
-    window.history.pushState({}, "", url.toString());
 
     let endpoint = `/api/spotify/search/${q}?type=` + type;
     let resp = await fetch(endpoint, { credentials: "include" });
     let data: SearchResult = await resp.json();
 
-    console.log(data);
+    // set a unique identifier to cache the previous search
+    let randomID = Math.random().toString(36).substring(7);
+    url.searchParams.set("cache", randomID);
+
+    localStorage.setItem("search", JSON.stringify({
+      data: data,
+      id: randomID
+    }))
+
+    window.history.pushState({}, "", url.toString());
     setResults(data);
   }
 
@@ -114,6 +123,7 @@ function Search() {
     let url = new URL(window.location.href);
     let q = url.searchParams.get("q");
     let type = url.searchParams.get("type");
+    let cacheID = url.searchParams.get("cache");
 
     if (q) searchbar.current!.value = q;
     else return;
@@ -122,6 +132,17 @@ function Search() {
       albums.current!.checked = type.includes("album");
       artists.current!.checked = type.includes("artist");
       tracks.current!.checked = type.includes("track");
+    }
+
+    if (cacheID) {
+      let cacheData = localStorage.getItem("search");
+      if (cacheData) {
+        let cacheJSON = JSON.parse(cacheData);
+        if (cacheJSON.id === cacheID) {
+          setResults(cacheJSON.data);
+          return;
+        }
+      }
     }
 
     handleSearch().then();
@@ -181,6 +202,7 @@ function Search() {
                 focus:shadow-outline focus:outline-none focus:border-"
             />
             <button
+              ref={searchButton}
               onClick={handleSearch}
               className="bg-white text-black px-2 py-1 rounded-r-xl BOBorder font-bold border-2 drop-shadow-md
                 hover:border- focus:outline-none hover:ring-2 focus:border-black hover:ring-opacity-50"
