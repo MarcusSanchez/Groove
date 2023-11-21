@@ -6,6 +6,7 @@ import (
 	Session "GrooveGuru/ent/session"
 	SpotifyLink "GrooveGuru/ent/spotifylink"
 	"GrooveGuru/env"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -21,7 +22,7 @@ import (
 	"time"
 )
 
-var client, ctx = db.Instance()
+var client = db.Instance()
 
 type (
 	form    map[string]string
@@ -66,6 +67,8 @@ func ReactServer(c *fiber.Ctx) error {
 // Useful for instances where the user should not be logged-in/authenticated.
 // i.e. login and register pages.
 func RedirectAuthorized(c *fiber.Ctx) error {
+	ctx := c.Context()
+
 	authorization := c.Cookies("Authorization")
 	if authorization == "" {
 		return c.Next()
@@ -94,6 +97,8 @@ func RedirectAuthorized(c *fiber.Ctx) error {
 // for general use of endpoints where the user just needs to be logged in.
 // i.e. viewing content, searching songs, etc...
 func AuthorizeAny(c *fiber.Ctx) error {
+	ctx := c.Context()
+
 	authorization := c.Cookies("Authorization")
 	if authorization == "" {
 		return unauthorized(c)
@@ -125,6 +130,8 @@ func AuthorizeAny(c *fiber.Ctx) error {
 //
 // NOTE: this middleware is meant to be used after with AuthorizeAny or CheckCSRF to retrieve session.
 func RedirectLinked(c *fiber.Ctx) error {
+	ctx := c.Context()
+
 	session := c.Locals("session").(*ent.Session)
 
 	// check if a link already exists.
@@ -145,6 +152,7 @@ func RedirectLinked(c *fiber.Ctx) error {
 //
 // NOTE: this middleware fulfills the same purpose as AuthorizeAny, no need to use both.
 func CheckCSRF(c *fiber.Ctx) error {
+	ctx := c.Context()
 
 	type CSRF struct {
 		Csrf string `json:"csrf_"`
@@ -194,6 +202,8 @@ func CheckCSRF(c *fiber.Ctx) error {
 // if user is linked to spotify, the access token will be theirs;
 // otherwise, the access token will be the default token.
 func SetAccess(c *fiber.Ctx) error {
+	ctx := c.Context()
+
 	session := c.Locals("session").(*ent.Session)
 
 	// check if the user is linked to spotify, if so, use their access token.
@@ -334,7 +344,7 @@ func defaultAccessToken() (*ent.SpotifyLink, error) {
 	link, err := client.SpotifyLink.
 		Query().
 		Where(SpotifyLink.UserIDEQ(1)).
-		First(ctx)
+		First(context.Background())
 	if ent.IsNotFound(err) {
 		panic("default access token not found")
 	} else if err != nil {

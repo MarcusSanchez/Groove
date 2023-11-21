@@ -3,6 +3,7 @@ package db
 import (
 	OAuthState "GrooveGuru/ent/oauthstate"
 	Session "GrooveGuru/ent/session"
+	"context"
 	"fmt"
 	"time"
 )
@@ -19,7 +20,7 @@ func SpawnSessionCleaner() {
 		affected, err := client.Session.
 			Delete().
 			Where(Session.ExpirationLT(time.Now())).
-			Exec(ctx)
+			Exec(context.Background())
 		if err != nil {
 			logError("SessionCleaner[CRON]", "Worker", err)
 		} else {
@@ -41,7 +42,7 @@ func SpawnOAuthStoreCleaner() {
 		affected, err := client.OAuthState.
 			Delete().
 			Where(OAuthState.ExpirationLT(time.Now())).
-			Exec(ctx)
+			Exec(context.Background())
 		if err != nil {
 			logError("OAuthStoreCleaner[CRON]", "Worker", err)
 		} else {

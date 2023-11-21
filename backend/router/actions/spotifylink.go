@@ -39,6 +39,7 @@ type (
 // Authorization page that the client will redirect the user to.
 // Returns 200 if successful.
 func LinkSpotify(c *fiber.Ctx) error {
+	ctx := c.Context()
 	session := c.Locals("session").(*ent.Session)
 
 	// generate a random 16 character string for the state parameter.
@@ -83,6 +84,7 @@ func LinkSpotify(c *fiber.Ctx) error {
 // It then saves the tokens as a SpotifyLink, successfully linking Groove and Spotify accounts.
 // Returns 201 if successful.
 func SpotifyCallback(c *fiber.Ctx, code, state string) error {
+	ctx := c.Context()
 	session := c.Locals("session").(*ent.Session)
 
 	// verify state to prevent CSRF.
@@ -173,6 +175,7 @@ func SpotifyCallback(c *fiber.Ctx, code, state string) error {
 // UnlinkSpotify deletes the SpotifyLink for the user.
 // Returns 204 no content if successful.
 func UnlinkSpotify(c *fiber.Ctx) error {
+	ctx := c.Context()
 	session := c.Locals("session").(*ent.Session)
 
 	// check if user has a spotify link.

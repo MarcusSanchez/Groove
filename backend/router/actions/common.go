@@ -10,7 +10,7 @@ import (
 
 const week = time.Hour * 24 * 7
 
-var client, ctx = db.Instance()
+var client = db.Instance()
 
 // setSessionCookies sets the Authorization and Csrf cookies.
 func setSessionCookies(c *fiber.Ctx, authorization, csrf string, expiration time.Time) {

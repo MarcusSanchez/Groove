@@ -16,6 +16,7 @@ import (
 // returns a 400 if the username or email is already taken/invalid.
 // returns a 201 if the user and session are created.
 func Register(c *fiber.Ctx, password, username, email string) error {
+	ctx := c.Context()
 
 	// validate user input in order to prevent unnecessary database calls.
 	isValid := db.ValidateUser(username, email, password)
@@ -97,6 +98,7 @@ func Register(c *fiber.Ctx, password, username, email string) error {
 // returns a 400 if the username does not exist or the password is incorrect.
 // returns a 201 if the session is created.
 func Login(c *fiber.Ctx, username, password string) error {
+	ctx := c.Context()
 
 	// grab user from database.
 	user, err := client.User.
@@ -149,6 +151,7 @@ func Login(c *fiber.Ctx, username, password string) error {
 // Logout deletes the session and clears the Authorization cookie.
 // returns a 204 if the session is deleted.
 func Logout(c *fiber.Ctx) error {
+	ctx := c.Context()
 	session := c.Locals("session").(*ent.Session)
 
 	err := client.Session.DeleteOne(session).Exec(ctx)
@@ -165,6 +168,7 @@ func Logout(c *fiber.Ctx) error {
 // Authenticate resets the session expiration and returns the user's username, email, and status for spotify link.
 // returns a 200 if the session is updated.
 func Authenticate(c *fiber.Ctx) error {
+	ctx := c.Context()
 	session := c.Locals("session").(*ent.Session)
 
 	user, err := client.User.

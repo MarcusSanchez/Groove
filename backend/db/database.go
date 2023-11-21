@@ -8,7 +8,6 @@ import (
 	"log"
 )
 
-var ctx = context.Background()
 var client *ent.Client
 
 func init() {
@@ -24,13 +23,13 @@ func init() {
 
 func Migrations() {
 	// init will handle the majority of the work
-	if err := client.Schema.Create(ctx); err != nil {
+	if err := client.Schema.Create(context.Background()); err != nil {
 		log.Fatal("failed creating schema resources: ", err)
 	}
 }
 
-func Instance() (*ent.Client, context.Context) {
-	return client, ctx
+func Instance() *ent.Client {
+	return client
 }
 
 func Close() {
