@@ -17,8 +17,7 @@ func init() {
 		log.Fatal("failed connecting to postgresql: ", err)
 	}
 
-	go SpawnSessionCleaner()
-	go SpawnOAuthStoreCleaner()
+	go ScheduleCleaners()
 }
 
 func Migrations() {
