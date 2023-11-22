@@ -1,64 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Album, Artist, DataType, SearchResult, SearchType, Track } from "./types.ts";
+import { msToMinutesSeconds, redirect, sortResults } from "./util.ts";
 
-type Image = {
-  height: number;
-  url: string;
-  width: number;
-};
-
-type ListedArtists = {
-  href: string;
-  id: string;
-  name: string;
-  type: string;
-};
-
-type Album = {
-  album_type: string;
-  artists: ListedArtists[];
-  id: string;
-  images: Image[];
-  name: string;
-  release_date: string;
-  type: string;
-};
-
-type Track = {
-  album: Album;
-  artists: ListedArtists[];
-  duration_ms: number;
-  id: string;
-  name: string;
-  // uri: string;
-};
-
-type Artist = {
-  genres: string[];
-  id: string;
-  images: Image[];
-  name: string;
-  popularity: number;
-  type: string;
-}
-
-type SearchResult = {
-  albums?: {
-    items: Album[];
-  };
-  artists?: {
-    items: Artist[];
-  };
-  tracks?: {
-    items: Track[];
-  };
-};
-
-enum SearchType {
-  Album = "album",
-  Artist = "artist",
-  Track = "track",
-}
+const noImageURL = "https://static.thenounproject.com/png/1554489-200.png";
 
 function Search() {
   const albums = useRef<HTMLInputElement>(null);
@@ -66,24 +11,9 @@ function Search() {
   const tracks = useRef<HTMLInputElement>(null);
   const searchbar = useRef<HTMLInputElement>(null);
   const searchButton = useRef<HTMLButtonElement>(null);
+  const resultsDiv = useRef<HTMLDivElement>(null);
 
-  const navigate = useNavigate();
-  const redirect = (id: string, type: SearchType) => {
-    switch (type) {
-      case SearchType.Album:
-        navigate(`/dashboard/album?id=${id}`);
-        break;
-      case SearchType.Artist:
-        navigate(`/dashboard/artist?id=${id}`);
-        break;
-      case SearchType.Track:
-        navigate(`/dashboard/track?id=${id}`);
-        break;
-    }
-
-  }
-
-  const [results, setResults] = useState<SearchResult | null>(null);
+  const [results, setResults] = useState<DataType[] | null>(null);
 
   const handleSearch = async () => {
     let q = searchbar.current!.value;
@@ -106,13 +36,15 @@ function Search() {
     let randomID = Math.random().toString(36).substring(7);
     url.searchParams.set("cache", randomID);
 
+    let sortedResults = sortResults(data.artists?.items, data.albums?.items, data.tracks?.items);
     localStorage.setItem("search", JSON.stringify({
-      data: data,
+      data: sortedResults,
       id: randomID
     }))
 
     window.history.pushState({}, "", url.toString());
-    setResults(data);
+    setResults(sortedResults);
+    resultsDiv.current!.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   useEffect(() => {
@@ -216,80 +148,18 @@ function Search() {
         <div className="mt-4">
           <h1 className="text-2xl font-bold mb-4 text-black text-center italic">Results</h1>
           <div className="flex justify-center">
-            <div className="w-[95%] h-[500px] overflow-scroll bg-white bg-opacity-70 BOBorder border-2 rounded-lg">
+            <div ref={resultsDiv} className="w-[95%] h-[500px] overflow-scroll bg-white bg-opacity-70 BOBorder border-2 rounded-lg">
               <div className="m-5">
                 {!results &&
                   <h1 className="text-2xl font-bold text-black text-center italic">
                     Just search for something!
                   </h1>
                 }
-                {results && (
+                {results &&
                   <div className="grid grid-cols-1 lg:grid-cols-2 w-full gap-4">
-                    {results.albums?.items.map((album) => (
-                      <div key={album.id} className="bg-white bg-opacity-70 border-black border-2 rounded-lg p-4 flex justify-between lg:gap-1 gap-4">
-                        <div className="flex flex-col justify-between">
-                          <div>
-                            <h2
-                              onClick={() => redirect(album.id, SearchType.Album)}
-                              className="lg:text-lg text-base font-bold hover:cursor-pointer"
-                            >
-                              {album.name}
-                            </h2>
-                            <p className="text-sm font-bold text-gray-700">{album.artists.map((artist) => artist.name).join(', ')}</p>
-                            <p className="text-sm text-gray-500">{album.release_date.slice(0, 4)}</p>
-                          </div>
-                          <p className="text-sm text-gray-700 font-bold">album</p>
-                        </div>
-                        <img
-                          onClick={() => redirect(album.id, SearchType.Album)}
-                          src={album.images[0]?.url} alt={album.name} className="lg:h-32 h-24 lg:w-32 w-24 rounded-xl hover:cursor-pointer border-black border"
-                        />
-                      </div>
-                    ))}
-                    {results.artists?.items.map((artist) => (
-                      <div key={artist.id} className="bg-white bg-opacity-70 border-black border-2 rounded-lg p-4 flex justify-between lg:gap-1 gap-4">
-                        <div className="flex flex-col justify-between">
-                          <div>
-                            <h2
-                              onClick={() => redirect(artist.id, SearchType.Artist)}
-                              className="lg:text-lg text-base font-bold hover:cursor-pointer"
-                            >
-                              {artist.name}
-                            </h2>
-                            <p className="text-sm text-gray-500">{artist.genres.join(', ')}</p>
-                          </div>
-                          <p className="text-sm text-gray-700 font-bold">artist</p>
-                        </div>
-                        <img
-                          onClick={() => redirect(artist.id, SearchType.Artist)}
-                          src={artist.images[0]?.url} alt={artist.name} className="lg:h-32 h-24 lg:w-32 w-24 rounded-xl hover:cursor-pointer border-black border"
-                        />
-                      </div>
-                    ))}
-                    {results.tracks?.items.map((track) => (
-                      <div key={track.id} className="bg-white bg-opacity-70 border-black border-2 rounded-lg p-4 flex justify-between lg:gap-1 gap-4">
-                        <div className="flex flex-col justify-between">
-                          <div>
-                            <h2
-                              onClick={() => redirect(track.id, SearchType.Artist)}
-                              className="lg:text-lg text-base font-bold hover:cursor-pointer"
-                            >
-                              {track.name}
-                            </h2>
-                            <p className="text-sm font-bold text-gray-700">{track.artists.map((artist) => artist.name).join(', ')}</p>
-                            <p className="text-sm font-bold text-gray-500">{track.album.name}</p>
-                            <p className="text-sm text-gray-500">{msToMinutesSeconds(track.duration_ms)}</p>
-                          </div>
-                          <p className="text-sm text-gray-700 font-bold">track</p>
-                        </div>
-                        <img
-                          onClick={() => redirect(track.id, SearchType.Artist)}
-                          src={track.album.images[0]?.url} alt={track.album.name} className="lg:h-32 h-24 lg:w-32 w-24 rounded-xl hover:cursor-pointer border-black border"
-                        />
-                      </div>
-                    ))}
+                    <DisplayResults results={results} />
                   </div>
-                )}
+                }
               </div>
             </div>
           </div>
@@ -300,19 +170,85 @@ function Search() {
   );
 }
 
-function msToMinutesSeconds(durationMs: number): string {
-  // Convert milliseconds to seconds
-  const durationSec: number = Math.floor(durationMs / 1000);
-
-  // Calculate minutes and seconds
-  const minutes: number = Math.floor(durationSec / 60);
-  const seconds: number = durationSec % 60;
-
-  // Format the result
-  const result: string = `${minutes}:${seconds.toString().padStart(2, '0')}`; // Ensure seconds are displayed with leading zero if needed
-
-  return result;
+function DisplayResults({ results }: { results: (DataType[] | null) }) {
+  const navigate = useNavigate();
+  return (
+    <>
+      {results?.map((result) => {
+        switch (result.type) {
+          case SearchType.Album:
+            const album = result.data as Album;
+            return (
+              <div key={album.id} className="bg-white bg-opacity-70 border-black border-2 rounded-lg p-4 flex justify-between lg:gap-1 gap-4">
+                <div className="flex flex-col justify-between">
+                  <div>
+                    <h2
+                      onClick={() => redirect(album.id, SearchType.Album, navigate)}
+                      className="lg:text-lg text-base font-bold hover:cursor-pointer"
+                    >
+                      {album.name}
+                    </h2>
+                    <p className="text-sm font-bold text-gray-700">{album.artists.map((artist) => artist.name).join(', ')}</p>
+                    <p className="text-sm text-gray-500">{album.release_date.slice(0, 4)}</p>
+                  </div>
+                  <p className="text-sm text-gray-700 font-bold">album</p>
+                </div>
+                <img
+                  onClick={() => redirect(album.id, SearchType.Album, navigate)}
+                  src={album.images[0]?.url || noImageURL} alt={album.name} className="lg:h-32 h-24 lg:w-32 w-24 rounded-xl hover:cursor-pointer border-black border"
+                />
+              </div>
+            )
+          case SearchType.Artist:
+            const artist = result.data as Artist;
+            return (
+              <div key={artist.id} className="bg-white bg-opacity-70 border-black border-2 rounded-lg p-4 flex justify-between lg:gap-1 gap-4">
+                <div className="flex flex-col justify-between">
+                  <div>
+                    <h2
+                      onClick={() => redirect(artist.id, SearchType.Artist, navigate)}
+                      className="lg:text-lg text-base font-bold hover:cursor-pointer"
+                    >
+                      {artist.name}
+                    </h2>
+                    <p className="text-sm text-gray-500">{artist.genres.join(', ')}</p>
+                  </div>
+                  <p className="text-sm text-gray-700 font-bold">artist</p>
+                </div>
+                <img
+                  onClick={() => redirect(artist.id, SearchType.Artist, navigate)}
+                  src={artist.images[0]?.url || noImageURL} alt={artist.name} className="lg:h-32 h-24 lg:w-32 w-24 rounded-xl hover:cursor-pointer border-black border"
+                />
+              </div>
+            );
+          case SearchType.Track:
+            const track = result.data as Track;
+            return (
+              <div key={track.id} className="bg-white bg-opacity-70 border-black border-2 rounded-lg p-4 flex justify-between lg:gap-1 gap-4">
+                <div className="flex flex-col justify-between">
+                  <div>
+                    <h2
+                      onClick={() => redirect(track.id, SearchType.Artist, navigate)}
+                      className="lg:text-lg text-base font-bold hover:cursor-pointer"
+                    >
+                      {track.name}
+                    </h2>
+                    <p className="text-sm font-bold text-gray-700">{track.artists.map((artist) => artist.name).join(', ')}</p>
+                    <p className="text-sm font-bold text-gray-500">{track.album.name}</p>
+                    <p className="text-sm text-gray-500">{msToMinutesSeconds(track.duration_ms)}</p>
+                  </div>
+                  <p className="text-sm text-gray-700 font-bold">track</p>
+                </div>
+                <img
+                  onClick={() => redirect(track.id, SearchType.Artist, navigate)}
+                  src={track.album.images[0]?.url || noImageURL} alt={track.album.name} className="lg:h-32 h-24 lg:w-32 w-24 rounded-xl hover:cursor-pointer border-black border"
+                />
+              </div>
+            );
+        }
+      })}
+    </>
+  );
 }
-
 
 export default Search;
