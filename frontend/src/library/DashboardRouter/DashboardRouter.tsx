@@ -4,7 +4,7 @@ import { loadedAtom, loggedInAtom, sidebarAtom } from "Atoms";
 import Profile from "./Profile/Profile";
 import Home from "./Home/Home.tsx";
 import Search from "./Search/Search.tsx";
-import React from "react";
+import PagesRouter from "./PagesRouter/PagesRouter.tsx";
 
 function DashboardRouter() {
   const [isLoaded] = useAtom(loadedAtom);
@@ -38,6 +38,7 @@ function DashboardRouter() {
           <Route path="/" element={<Home />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/pages/*" element={<PagesRouter />} />
           <Route path="*" element={<h1>404 Not Found</h1>} />
         </Routes>
       </main>

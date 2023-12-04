@@ -54,7 +54,7 @@ func GetArtistAlbums(c *fiber.Ctx, artistID string) error {
 	access := c.Locals("access").(string)
 
 	spotify, response := artistRequest(c,
-		"/artists/"+artistID+"/albums?market=US&limit=50",
+		"/artists/"+artistID+"/albums?market=US&limit=50&include_groups=album",
 		access,
 	)
 	if spotify == nil {

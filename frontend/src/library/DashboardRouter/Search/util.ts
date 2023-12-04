@@ -1,20 +1,5 @@
 import { Album, Artist, DataType, SearchType, Track } from "./types.ts";
 
-export function redirect(id: string, type: SearchType, navigate: any) {
-  switch (type) {
-    case SearchType.Album:
-      navigate(`/dashboard/${type}?id=${id}`);
-      break;
-    case SearchType.Artist:
-      navigate(`/dashboard/artist?id=${id}`);
-      break;
-    case SearchType.Track:
-      navigate(`/dashboard/track?id=${id}`);
-      break;
-  }
-}
-
-
 export function sortResults(Artists?: Artist[], Albums?: Album[], Tracks?: Track[]): DataType[] {
   const artists = Artists?.map((artist) => ({ data: artist, type: SearchType.Artist })) || [] as DataType[];
   const albums = Albums?.map((album) => ({ data: album, type: SearchType.Album })) || [] as DataType[];

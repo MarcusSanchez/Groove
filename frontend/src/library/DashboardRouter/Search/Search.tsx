@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Album, Artist, DataType, SearchResult, SearchType, Track } from "./types.ts";
-import { msToMinutesSeconds, redirect, sortResults } from "./util.ts";
+import { msToMinutesSeconds, sortResults } from "./util.ts";
+import { HashLink } from "react-router-hash-link";
 
 const noImageURL = "https://static.thenounproject.com/png/1554489-200.png";
 
@@ -28,7 +29,7 @@ function Search() {
     url.searchParams.set("q", q);
     url.searchParams.set("type", type);
 
-    let endpoint = `/api/spotify/search/${q}?type=` + type;
+    let endpoint = `/api/spotify/search/${q.replaceAll(" ", "+")}?type=` + type;
     let resp = await fetch(endpoint, { credentials: "include" });
     let data: SearchResult = await resp.json();
 
@@ -182,67 +183,80 @@ function DisplayResults({ results }: { results: (DataType[] | null) }) {
               <div key={album.id} className="bg-white bg-opacity-70 border-black border-2 rounded-lg p-4 flex justify-between lg:gap-1 gap-4">
                 <div className="flex flex-col justify-between">
                   <div>
-                    <h2
-                      onClick={() => redirect(album.id, SearchType.Album, navigate)}
+                    <HashLink
+                      to={`/dashboard/pages/album?id=${album.id}#top`}
                       className="lg:text-lg text-base font-bold hover:cursor-pointer"
                     >
                       {album.name}
-                    </h2>
+                    </HashLink>
                     <p className="text-sm font-bold text-gray-700">{album.artists.map((artist) => artist.name).join(', ')}</p>
                     <p className="text-sm text-gray-500">{album.release_date.slice(0, 4)}</p>
                   </div>
                   <p className="text-sm text-gray-700 font-bold">album</p>
                 </div>
-                <img
-                  onClick={() => redirect(album.id, SearchType.Album, navigate)}
-                  src={album.images[0]?.url || noImageURL} alt={album.name} className="lg:h-32 h-24 lg:w-32 w-24 rounded-xl hover:cursor-pointer border-black border"
-                />
+                <HashLink to={`/dashboard/pages/album?id=${album.id}#top`}>
+                  <img
+                    src={album.images[0]?.url || noImageURL} alt={album.name}
+                    className="lg:h-32 h-24 lg:w-32 w-24 rounded-xl hover:cursor-pointer border-black border"
+                  />
+                </HashLink>
               </div>
             )
           case SearchType.Artist:
             const artist = result.data as Artist;
             return (
-              <div key={artist.id} className="bg-white bg-opacity-70 border-black border-2 rounded-lg p-4 flex justify-between lg:gap-1 gap-4">
+              <div
+                key={artist.id}
+                className="bg-white bg-opacity-70 border-black border-2
+                rounded-lg p-4 flex justify-between lg:gap-1 gap-4"
+              >
                 <div className="flex flex-col justify-between">
                   <div>
-                    <h2
-                      onClick={() => redirect(artist.id, SearchType.Artist, navigate)}
+                    <HashLink
+                      to={`/dashboard/pages/artist?id=${artist.id}#top`}
                       className="lg:text-lg text-base font-bold hover:cursor-pointer"
                     >
                       {artist.name}
-                    </h2>
+                    </HashLink>
                     <p className="text-sm text-gray-500">{artist.genres.join(', ')}</p>
                   </div>
                   <p className="text-sm text-gray-700 font-bold">artist</p>
                 </div>
-                <img
-                  onClick={() => redirect(artist.id, SearchType.Artist, navigate)}
-                  src={artist.images[0]?.url || noImageURL} alt={artist.name} className="lg:h-32 h-24 lg:w-32 w-24 rounded-xl hover:cursor-pointer border-black border"
-                />
+                <HashLink to={`/dashboard/pages/artist?id=${artist.id}#top`}>
+                  <img
+                    src={artist.images[0]?.url || noImageURL} alt={artist.name}
+                    className="lg:h-32 h-24 lg:w-32 w-24 rounded-xl hover:cursor-pointer border-black border"
+                  />
+                </HashLink>
               </div>
             );
           case SearchType.Track:
             const track = result.data as Track;
             return (
-              <div key={track.id} className="bg-white bg-opacity-70 border-black border-2 rounded-lg p-4 flex justify-between lg:gap-1 gap-4">
+              <div
+                key={track.id}
+                className="bg-white bg-opacity-70 border-black border-2 rounded-lg p-4 flex justify-between lg:gap-1 gap-4"
+              >
                 <div className="flex flex-col justify-between">
                   <div>
-                    <h2
-                      onClick={() => redirect(track.id, SearchType.Artist, navigate)}
+                    <HashLink
+                      to={`/dashboard/pages/track?id=${track.id}#top`}
                       className="lg:text-lg text-base font-bold hover:cursor-pointer"
                     >
                       {track.name}
-                    </h2>
+                    </HashLink>
                     <p className="text-sm font-bold text-gray-700">{track.artists.map((artist) => artist.name).join(', ')}</p>
                     <p className="text-sm font-bold text-gray-500">{track.album.name}</p>
                     <p className="text-sm text-gray-500">{msToMinutesSeconds(track.duration_ms)}</p>
                   </div>
                   <p className="text-sm text-gray-700 font-bold">track</p>
                 </div>
-                <img
-                  onClick={() => redirect(track.id, SearchType.Artist, navigate)}
-                  src={track.album.images[0]?.url || noImageURL} alt={track.album.name} className="lg:h-32 h-24 lg:w-32 w-24 rounded-xl hover:cursor-pointer border-black border"
-                />
+                <HashLink to={`/dashboard/pages/track?id=${track.id}#top`}>
+                  <img
+                    src={track.album.images[0]?.url || noImageURL} alt={track.album.name}
+                    className="lg:h-32 h-24 lg:w-32 w-24 rounded-xl hover:cursor-pointer border-black border"
+                  />
+                </HashLink>
               </div>
             );
         }
