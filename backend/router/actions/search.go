@@ -8,6 +8,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Search searches Spotify for a given query.
+// returns a JSON response from Spotify.
+// returns 200 if successful.
 func Search(c *fiber.Ctx, query, Type, market string, limit string) error {
 	access := c.Locals("access").(string)
 

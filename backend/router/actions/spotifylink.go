@@ -197,6 +197,9 @@ func UnlinkSpotify(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
+// GetCurrentUser retrieves the current user's ID if they are linked to Spotify.
+// required to grab the user's playlists.
+// Returns 200 if successful.
 func GetCurrentUser(c *fiber.Ctx) error {
 	access := c.Locals("access").(string)
 

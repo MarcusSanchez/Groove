@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Landing from "./Landing/Landing.tsx";
 import Login from "./Login/Login.tsx";
 import Register from "./Register/Register.tsx";
+import NotFound from "./NotFound/NotFound.tsx";
 import { useEffect } from "react";
 import { getCookie } from "@/util.ts";
 import { useAtom } from "jotai";
@@ -97,7 +98,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard/*" element={<DashboardRouter />} />
-        <Route path="*" element={<h1>404 Not Found</h1>} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />
     </BrowserRouter>

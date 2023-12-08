@@ -8,6 +8,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// GetAlbum returns the album with the given id.
+// returns 400 if the album-id is invalid.
+// returns 404 if the album is not found.
+// returns 200 with the album data if successful.
 func GetAlbum(c *fiber.Ctx, albumID string) error {
 	access := c.Locals("access").(string)
 
@@ -22,6 +26,10 @@ func GetAlbum(c *fiber.Ctx, albumID string) error {
 	return albumResponse(c, spotify)
 }
 
+// GetAlbumTracks returns the tracks of the album with the given id.
+// returns 400 if the album-id is invalid.
+// returns 404 if the album is not found.
+// returns 200 with the album tracks if successful.
 func GetAlbumTracks(c *fiber.Ctx, albumID string) error {
 	access := c.Locals("access").(string)
 
@@ -38,6 +46,7 @@ func GetAlbumTracks(c *fiber.Ctx, albumID string) error {
 
 /** helpers **/
 
+// albumRequest proxy request to the spotify api for the given endpoint.
 func albumRequest(c *fiber.Ctx, endpoint, access string) (*resty.Response, error) {
 	resp, err := resty.New().R().
 		SetHeaders(headers{
@@ -53,6 +62,7 @@ func albumRequest(c *fiber.Ctx, endpoint, access string) (*resty.Response, error
 	return resp, nil
 }
 
+// albumResponse handles the response from the spotify api.
 func albumResponse(c *fiber.Ctx, resp *resty.Response) error {
 	switch resp.StatusCode() {
 	case 400:

@@ -301,6 +301,9 @@ func SetAccess(c *fiber.Ctx) error {
 	return c.Next()
 }
 
+// AuthorizeLinked authorizes the user if the Authorization cookie is set and valid (no permissions necessary).
+// for general use of endpoints where the user just needs to be logged in and linked with spotify.
+// i.e. viewing, editing playlists, etc...
 func AuthorizeLinked(c *fiber.Ctx) error {
 	ctx := c.Context()
 

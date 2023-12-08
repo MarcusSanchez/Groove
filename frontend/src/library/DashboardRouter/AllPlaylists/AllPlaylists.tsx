@@ -28,10 +28,16 @@ function AllPlaylists() {
     <>
       {spotify &&
         <div className="w-full flex justify-center content-center">
-          <div className="m-5 sm:p-8 p-4 rounded-lg Shadow BOBorder border-2 w-[95%] h-min">
+          <div className="m-5 sm:p-8 p-4 rounded-lg Shadow BOBorder border-2 w-[95%] min-h-[440px] h-min">
             <div className="flex flex-col"> {/* All Playlists */}
               <h1 className="font-bold lg:text-4xl md:text-2xl text-xl mb-2 text-center">Playlists</h1>
               <hr className="border border-black mb-4" />
+
+              {playlists?.items.length === 0 &&
+                <p className="text-center">
+                  You have no playlists
+                </p>
+              }
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-[95%]">
                 {playlists?.items.map((playlist, i) => (

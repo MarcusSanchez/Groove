@@ -8,6 +8,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// GetTrack returns a track object from the Spotify API.
+// returns 400 if the track-id is invalid.
+// returns 404 if the track is not found.
+// returns 200 if the track is found.
 func GetTrack(c *fiber.Ctx, trackID string) error {
 	access := c.Locals("access").(string)
 

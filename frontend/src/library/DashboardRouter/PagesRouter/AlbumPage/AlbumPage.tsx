@@ -38,7 +38,7 @@ function AlbumPage() {
     switch (resp.status) {
       case 400:
       case 404:
-        navigate("/404");
+        navigate("/dashboard/404");
         return;
       case 500:
         console.error("Internal Server Error Fetching Album");

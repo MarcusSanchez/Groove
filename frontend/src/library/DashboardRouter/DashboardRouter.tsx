@@ -5,14 +5,15 @@ import Profile from "./Profile/Profile";
 import Search from "./Search/Search.tsx";
 import PagesRouter from "./PagesRouter/PagesRouter.tsx";
 import AllPlaylists from "./AllPlaylists/AllPlaylists.tsx";
+import NotFound from "@/library/NotFound/NotFound.tsx";
 
 function DashboardRouter() {
   const [isLoaded] = useAtom(loadedAtom);
   const [isLoggedIn] = useAtom(loggedInAtom);
   const [sidebar, setSidebar] = useAtom(sidebarAtom);
-  const navigator = useNavigate();
+  const navigate = useNavigate();
 
-  if (isLoaded && !isLoggedIn) navigator("/");
+  if (isLoaded && !isLoggedIn) navigate("/");
 
   return (
     <div className="flex gap-3 sm:mx-[7%] mt-[15px] max-w-full">
@@ -63,7 +64,7 @@ function DashboardRouter() {
           <Route path="/playlists" element={<AllPlaylists />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/pages/*" element={<PagesRouter />} />
-          <Route path="*" element={<h1>404 Not Found</h1>} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
     </div>

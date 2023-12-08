@@ -8,6 +8,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// GetArtist returns the artist with the given id.
+// Returns 400 if the artist-id is invalid.
+// Returns 404 if the artist is not found.
+// Returns 200 with the artist data if successful.
 func GetArtist(c *fiber.Ctx, artistID string) error {
 	access := c.Locals("access").(string)
 
@@ -22,6 +26,10 @@ func GetArtist(c *fiber.Ctx, artistID string) error {
 	return artistResponse(c, spotify)
 }
 
+// GetRelatedArtists returns the artists related to the artist with the given id.
+// Returns 400 if the artist-id is invalid.
+// Returns 404 if the artist is not found.
+// Returns 200 with the artist data if successful.
 func GetRelatedArtists(c *fiber.Ctx, artistID string) error {
 	access := c.Locals("access").(string)
 
@@ -36,6 +44,10 @@ func GetRelatedArtists(c *fiber.Ctx, artistID string) error {
 	return artistResponse(c, spotify)
 }
 
+// GetArtistTopTracks returns the top tracks of the artist with the given id.
+// Returns 400 if the artist-id is invalid.
+// Returns 404 if the artist is not found.
+// Returns 200 with the artist data if successful.
 func GetArtistTopTracks(c *fiber.Ctx, artistID string) error {
 	access := c.Locals("access").(string)
 
@@ -66,6 +78,7 @@ func GetArtistAlbums(c *fiber.Ctx, artistID string) error {
 
 /** helpers **/
 
+// artistRequest is a Proxy for the Spotify API's artist endpoints.
 func artistRequest(c *fiber.Ctx, endpoint, access string) (*resty.Response, error) {
 	resp, err := resty.New().R().
 		SetHeaders(headers{
@@ -81,6 +94,7 @@ func artistRequest(c *fiber.Ctx, endpoint, access string) (*resty.Response, erro
 	return resp, nil
 }
 
+// artistResponse handles the response from the Spotify API.
 func artistResponse(c *fiber.Ctx, resp *resty.Response) error {
 	switch resp.StatusCode() {
 	case 400:

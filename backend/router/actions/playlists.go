@@ -8,6 +8,8 @@ import (
 	"strconv"
 )
 
+// GetAllPlaylists returns all playlists for the current user.
+// returns 200 on success.
 func GetAllPlaylists(c *fiber.Ctx) error {
 	access := c.Locals("access").(string)
 
@@ -22,6 +24,10 @@ func GetAllPlaylists(c *fiber.Ctx) error {
 	return playlistResponse(c, spotify)
 }
 
+// GetPlaylist returns a playlist with the first 100 tracks with the given id.
+// returns 200 on success.
+// returns 404 if the playlist is not found.
+// returns 400 if the playlist-id is invalid.
 func GetPlaylist(c *fiber.Ctx, playlistID string) error {
 	access := c.Locals("access").(string)
 
@@ -36,6 +42,8 @@ func GetPlaylist(c *fiber.Ctx, playlistID string) error {
 	return playlistResponse(c, spotify)
 }
 
+// GetMorePlaylistTracks returns a playlist with the next 100 tracks with the given id.
+// returns 200 on success.
 func GetMorePlaylistTracks(c *fiber.Ctx, playlistID string, offset int) error {
 	access := c.Locals("access").(string)
 
@@ -50,6 +58,11 @@ func GetMorePlaylistTracks(c *fiber.Ctx, playlistID string, offset int) error {
 	return playlistResponse(c, spotify)
 }
 
+// AddTrackToPlaylist adds a track to a playlist with the given ids.
+// returns 201 on success.
+// returns 404 if the playlist is not found.
+// returns 403 if the playlist is not collaborative.
+// returns 400 if the playlist-id is invalid.
 func AddTrackToPlaylist(c *fiber.Ctx, playlistID, trackID string) error {
 	access := c.Locals("access").(string)
 
@@ -86,6 +99,11 @@ func AddTrackToPlaylist(c *fiber.Ctx, playlistID, trackID string) error {
 	}
 }
 
+// RemoveTrackFromPlaylist removes a track from a playlist with the given ids.
+// returns 200 on success.
+// returns 404 if the playlist is not found.
+// returns 403 if the playlist is not collaborative.
+// returns 400 if the playlist-id is invalid.
 func RemoveTrackFromPlaylist(c *fiber.Ctx, playlistID, trackID string) error {
 	access := c.Locals("access").(string)
 
@@ -125,6 +143,7 @@ func RemoveTrackFromPlaylist(c *fiber.Ctx, playlistID, trackID string) error {
 
 /** helpers **/
 
+// playlistRequest proxy request to the spotify api with the given endpoint and access token.
 func playlistRequest(c *fiber.Ctx, endpoint, access string) (*resty.Response, error) {
 	resp, err := resty.New().R().
 		SetHeaders(headers{
@@ -140,6 +159,7 @@ func playlistRequest(c *fiber.Ctx, endpoint, access string) (*resty.Response, er
 	return resp, nil
 }
 
+// playlistResponse handles the response from the spotify api.
 func playlistResponse(c *fiber.Ctx, resp *resty.Response) error {
 	switch resp.StatusCode() {
 	case 400:
