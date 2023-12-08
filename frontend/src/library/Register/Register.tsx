@@ -60,7 +60,7 @@ function Register() {
         setUsername(json.username);
         setEmail(json.email);
         setCsrfToken(getCookie("Csrf")); // the cookie will be there
-        navigate("/");
+        window.location.href = "/";
         break;
       case 308:
         window.location.href = "/";

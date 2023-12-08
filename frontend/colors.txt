@@ -1,4 +1,0 @@
-teal: #00adab
-orange: #ffa200
-red: #d6305b
-black: #333333

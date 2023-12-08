@@ -1,39 +1,39 @@
 .LandingText {
-    font-size: 2.7rem;
-    line-height: 1;
+  font-size: 2rem;
+  line-height: 1;
 }
 
 .LandingParagraph {
-    font-size: 1rem;
-    line-height: 1.2;
+  font-size: 1rem;
+  line-height: 1.2;
 }
 
 @media only screen and (min-width: 1700px) {
-    .LandingText {
-        font-size: 5rem;
-    }
+  .LandingText {
+    font-size: 5rem;
+  }
 
-    .LandingParagraph {
-        font-size: 1.5rem;
-    }
+  .LandingParagraph {
+    font-size: 1.5rem;
+  }
 }
 
 @media only screen and (min-width: 1400px) and (max-width: 1699px) {
-    .LandingText {
-        font-size: 4rem;
-    }
+  .LandingText {
+    font-size: 4rem;
+  }
 
-    .LandingParagraph {
-        font-size: 1.25rem;
-    }
+  .LandingParagraph {
+    font-size: 1.25rem;
+  }
 }
 
 @media only screen and (min-width: 800px) and (max-width: 1399px) {
-    .LandingText {
-        font-size: 3rem;
-    }
+  .LandingText {
+    font-size: 3rem;
+  }
 
-    .LandingParagraph {
-        font-size: 1.2rem;
-    }
+  .LandingParagraph {
+    font-size: 1.2rem;
+  }
 }

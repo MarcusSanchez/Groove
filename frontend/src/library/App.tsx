@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import { getCookie } from "@/util.ts";
 import { useAtom } from "jotai";
 import Footer from "./Footer/Footer.tsx";
-import { csrfTokenAtom, emailAtom, loadedAtom, loggedInAtom, spotifyAtom, usernameAtom } from "Atoms";
+import { csrfTokenAtom, emailAtom, loadedAtom, loggedInAtom, spotifyAtom, spotifyIDAtom, usernameAtom } from "Atoms";
 import DashboardRouter from "./DashboardRouter/DashboardRouter.tsx";
 
 function App() {
@@ -17,6 +17,7 @@ function App() {
   const [, setCsrfToken] = useAtom(csrfTokenAtom);
   const [, setIsLoaded] = useAtom(loadedAtom);
   const [, setSpotify] = useAtom(spotifyAtom);
+  const [, setSpotifyID] = useAtom(spotifyIDAtom);
 
   useEffect(() => {
     (async () => {
@@ -45,9 +46,10 @@ function App() {
         }
       }
 
+      let data: Payload | undefined;
       switch (resp.status) {
         case 200: // success
-          let data = await resp.json() as Payload;
+          data = await resp.json() as Payload;
           setLoggedIn(true);
           setUsername(data.user.username)
           setSpotify(data.user.spotify)
@@ -63,6 +65,26 @@ function App() {
           console.error("Internal Server Error Authenticating User");
           break;
       }
+
+      if (data?.user.spotify) {
+        resp = await fetch("/api/spotify/me", {
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+
+        switch (resp.status) {
+          case 200: // success
+            let data = await resp.json();
+            setSpotifyID(data.id);
+            break;
+          case 500: // internal server error
+            console.error("Internal Server Error Fetching Spotify ID");
+            break;
+        }
+      }
+
       setIsLoaded(true);
     })();
   }, [])

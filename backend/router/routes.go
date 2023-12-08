@@ -22,6 +22,7 @@ func Start(app *fiber.App) {
 	spotify.Post("/link", middleware.CheckCSRF, middleware.RedirectLinked, handlers.LinkSpotify)
 	spotify.Get("/callback", middleware.AuthorizeAny, handlers.SpotifyCallback)
 	spotify.Post("/unlink", middleware.CheckCSRF, handlers.UnlinkSpotify)
+	spotify.Get("/me", middleware.AuthorizeLinked, middleware.SetAccess, handlers.GetCurrentUser)
 
 	/** spotify-artist endpoints **/
 	artists := spotify.Group("/artists")
@@ -38,6 +39,14 @@ func Start(app *fiber.App) {
 	/** spotify-tracks endpoints **/
 	tracks := spotify.Group("/tracks")
 	tracks.Get("/:id", middleware.AuthorizeAny, middleware.SetAccess, handlers.GetTrack)
+
+	/** spotify-playlist endpoints **/
+	playlists := spotify.Group("/playlists")
+	playlists.Get("/", middleware.AuthorizeLinked, middleware.SetAccess, handlers.GetAllPlaylists)
+	playlists.Get("/:id", middleware.AuthorizeLinked, middleware.SetAccess, handlers.GetPlaylistWithTracks)
+	playlists.Get("/:id/load-more", middleware.AuthorizeLinked, middleware.SetAccess, handlers.GetMorePlaylistTracks)
+	playlists.Post("/:id/track", middleware.CheckCSRF, middleware.AuthorizeLinked, middleware.SetAccess, handlers.AddTrackToPlaylist)
+	playlists.Delete("/:id/track", middleware.CheckCSRF, middleware.AuthorizeLinked, middleware.SetAccess, handlers.RemoveTrackFromPlaylist)
 
 	/** spotify-search endpoints **/
 	search := spotify.Group("/search")

@@ -39,8 +39,8 @@ type (
 // Authorization page that the client will redirect the user to.
 // Returns 200 if successful.
 func LinkSpotify(c *fiber.Ctx) error {
-	ctx := c.Context()
 	session := c.Locals("session").(*ent.Session)
+	ctx := c.Context()
 
 	// generate a random 16 character string for the state parameter.
 	state := strings.ReplaceAll(uuid.New().String(), "-", "")[:16]
@@ -84,8 +84,8 @@ func LinkSpotify(c *fiber.Ctx) error {
 // It then saves the tokens as a SpotifyLink, successfully linking Groove and Spotify accounts.
 // Returns 201 if successful.
 func SpotifyCallback(c *fiber.Ctx, code, state string) error {
-	ctx := c.Context()
 	session := c.Locals("session").(*ent.Session)
+	ctx := c.Context()
 
 	// verify state to prevent CSRF.
 	storedState, err := client.OAuthState.
@@ -166,17 +166,14 @@ func SpotifyCallback(c *fiber.Ctx, code, state string) error {
 		return internalServerError(c, "error linking spotify")
 	}
 
-	return c.Status(201).JSON(fiber.Map{
-		"acknowledged": true,
-		"message":      "Spotify linked",
-	})
+	return c.Redirect(env.FrontendURL+"/dashboard/profile", 302)
 }
 
 // UnlinkSpotify deletes the SpotifyLink for the user.
 // Returns 204 no content if successful.
 func UnlinkSpotify(c *fiber.Ctx) error {
-	ctx := c.Context()
 	session := c.Locals("session").(*ent.Session)
+	ctx := c.Context()
 
 	// check if user has a spotify link.
 	link, err := client.SpotifyLink.
@@ -198,6 +195,34 @@ func UnlinkSpotify(c *fiber.Ctx) error {
 	}
 
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func GetCurrentUser(c *fiber.Ctx) error {
+	access := c.Locals("access").(string)
+
+	// get current user from spotify.
+	http := resty.New()
+	resp, err := http.R().
+		SetHeaders(headers{
+			"Authorization": "Bearer " + access,
+		}).
+		Get("https://api.spotify.com/v1/me")
+	if err != nil {
+		logError("GetCurrentUser", "Requesting current user", err)
+		return internalServerError(c, "error getting current user")
+	}
+
+	type CurrentUserResponse struct {
+		ID string `json:"id"`
+	}
+
+	payload := CurrentUserResponse{}
+	if json.Unmarshal(resp.Body(), &payload) != nil {
+		logError("GetCurrentUser", "Unmarshalling current user", err)
+		return internalServerError(c, "error getting current user")
+	}
+
+	return c.Status(fiber.StatusOK).JSON(payload)
 }
 
 /** helpers **/

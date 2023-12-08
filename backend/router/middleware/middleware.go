@@ -75,7 +75,10 @@ func RedirectAuthorized(c *fiber.Ctx) error {
 	}
 
 	// check if cookie session actually exists.
-	session, err := client.Session.Query().Where(Session.TokenEQ(authorization)).First(ctx)
+	session, err := client.Session.
+		Query().
+		Where(Session.TokenEQ(authorization)).
+		First(ctx)
 	if ent.IsNotFound(err) {
 		expireSessionCookies(c)
 		return c.Next()
@@ -105,7 +108,10 @@ func AuthorizeAny(c *fiber.Ctx) error {
 	}
 
 	// check if cookie session actually exists.
-	session, err := client.Session.Query().Where(Session.TokenEQ(authorization)).First(ctx)
+	session, err := client.Session.
+		Query().
+		Where(Session.TokenEQ(authorization)).
+		First(ctx)
 	if ent.IsNotFound(err) {
 		expireSessionCookies(c)
 		return unauthorized(c)
@@ -130,12 +136,14 @@ func AuthorizeAny(c *fiber.Ctx) error {
 //
 // NOTE: this middleware is meant to be used after with AuthorizeAny or CheckCSRF to retrieve session.
 func RedirectLinked(c *fiber.Ctx) error {
+	session := c.Locals("session").(*ent.Session)
 	ctx := c.Context()
 
-	session := c.Locals("session").(*ent.Session)
-
 	// check if a link already exists.
-	exists, err := client.SpotifyLink.Query().Where(SpotifyLink.UserIDEQ(session.UserID)).Exist(ctx)
+	exists, err := client.SpotifyLink.
+		Query().
+		Where(SpotifyLink.UserIDEQ(session.UserID)).
+		Exist(ctx)
 	if err != nil {
 		logError("RedirectLinked[MIDDLEWARE]", "checking spotify link", err)
 		return c.Status(fiber.StatusInternalServerError).SendString("error while authorizing")
@@ -169,7 +177,10 @@ func CheckCSRF(c *fiber.Ctx) error {
 	}
 
 	// check if cookie session actually exists.
-	session, err := client.Session.Query().Where(Session.TokenEQ(authorization)).First(ctx)
+	session, err := client.Session.
+		Query().
+		Where(Session.TokenEQ(authorization)).
+		First(ctx)
 	if ent.IsNotFound(err) {
 		expireSessionCookies(c)
 		return unauthorized(c)
@@ -202,9 +213,8 @@ func CheckCSRF(c *fiber.Ctx) error {
 // if user is linked to spotify, the access token will be theirs;
 // otherwise, the access token will be the default token.
 func SetAccess(c *fiber.Ctx) error {
-	ctx := c.Context()
-
 	session := c.Locals("session").(*ent.Session)
+	ctx := c.Context()
 
 	// check if the user is linked to spotify, if so, use their access token.
 	link, err := client.SpotifyLink.
@@ -288,6 +298,50 @@ func SetAccess(c *fiber.Ctx) error {
 	}
 
 	c.Locals("access", payload.AccessToken)
+	return c.Next()
+}
+
+func AuthorizeLinked(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	authorization := c.Cookies("Authorization")
+	if authorization == "" {
+		return unauthorized(c)
+	}
+
+	// check if cookie session actually exists.
+	session, ok := c.Locals("session").(*ent.Session)
+	if !ok {
+		var err error
+		session, err = client.Session.Query().Where(Session.TokenEQ(authorization)).First(ctx)
+		if ent.IsNotFound(err) {
+			expireSessionCookies(c)
+			return unauthorized(c)
+		} else if err != nil {
+			logError("AuthorizeAny[MIDDLEWARE]", "checking session", err)
+			return c.Status(fiber.StatusInternalServerError).SendString("error while authorizing")
+		}
+
+		// check if session has expired.
+		if session.Expiration.Before(time.Now()) {
+			expireSessionCookies(c)
+			return unauthorized(c)
+		}
+	}
+
+	// check if user is linked, else reject the request
+	exists, err := client.SpotifyLink.
+		Query().
+		Where(SpotifyLink.UserIDEQ(session.UserID)).
+		Exist(ctx)
+	if err != nil {
+		logError("AuthorizeLinked[MIDDLEWARE]", "checking spotify link", err)
+		return c.Status(fiber.StatusInternalServerError).SendString("error while authorizing")
+	} else if !exists {
+		return forbiddened(c)
+	}
+
+	c.Locals("session", session)
 	return c.Next()
 }
 

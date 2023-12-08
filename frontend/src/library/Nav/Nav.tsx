@@ -46,7 +46,7 @@ function Nav() {
       <Link to="/">
         <img
           src={logo} alt="groove-guru-logo.png"
-          className="sm:h-[5rem] h-[4rem] mx-[20px] my-[15px]"
+          className="sm:h-[5rem] h-[3rem] mx-[20px] my-[15px]"
         />
       </Link>
       <div className="flex items-center space-x-5 mx-4">
@@ -72,14 +72,14 @@ function Nav() {
           <>
             <Link
               to="/dashboard"
-              className="bg-white text-black px-4 py-2 rounded-xl BOBorder font-bold border-2
+              className="bg-white text-black px-4 py-2 rounded-xl BOBorder font-bold border-2 sm:text-base text-xs
               hover:border-brandTeal focus:outline-none hover:ring-2 focus:border-black hover:ring-opacity-50"
             >
               Dashboard
             </Link>
             <button
               onClick={handleLogout}
-              className="bg-white text-black px-4 py-2 rounded-xl BOBorder font-bold border-2
+              className="bg-white text-black px-4 py-2 rounded-xl BOBorder font-bold border-2 sm:text-base text-xs
               hover:border-brandTeal focus:outline-none hover:ring-2 focus:border-black hover:ring-opacity-50"
             >
               Logout

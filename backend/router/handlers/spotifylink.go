@@ -34,3 +34,8 @@ func UnlinkSpotify(c *fiber.Ctx) error {
 	response := actions.UnlinkSpotify(c)
 	return response
 }
+
+func GetCurrentUser(c *fiber.Ctx) error {
+	response := actions.GetCurrentUser(c)
+	return response
+}
