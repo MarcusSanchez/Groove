@@ -14,7 +14,6 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	recovery "github.com/gofiber/fiber/v2/middleware/recover"
 	"net/url"
@@ -46,9 +45,6 @@ func Attach(app *fiber.App) {
 			AllowOrigins:     env.FrontendURL,
 			AllowCredentials: true,
 		}))
-	case true:
-		// limits repeated requests to endpoints; protection against brute-force attacks.
-		app.Use(limiter.New())
 	}
 }
 
