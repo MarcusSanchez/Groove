@@ -1,18 +1,16 @@
-# Builder stage
 FROM golang:1.20-alpine AS builder
 
 WORKDIR /app
 
-# Copy only necessary files
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
 RUN go generate ./ent
-RUN go build -o main .
 
-# Final stage
+RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+
 FROM alpine:latest
 
 WORKDIR /app
@@ -20,7 +18,7 @@ WORKDIR /app
 COPY --from=builder /app/main .
 COPY --from=builder /app/public ./public
 
-EXPOSE 8080
+ENV PORT=3000
+EXPOSE 3000
 
-# Use ENTRYPOINT to make it easy to pass arguments to your application
 ENTRYPOINT ["./main"]
