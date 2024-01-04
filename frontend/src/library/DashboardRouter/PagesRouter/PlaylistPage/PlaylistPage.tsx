@@ -112,7 +112,7 @@ function PlaylistPage() {
             <h1 className="sm:text-3xl text-xl font-bold mb-1">{playlist?.name}</h1>
             <h2 className="text-base font-semibold italic text-gray-700">{playlistLength} Tracks</h2>
           </div>
-          <img className="sm:w-40 sm:h-40 w-28 h-28 rounded-md border border-black" src={playlist?.images[0]?.url || noImageURL} alt="Playlist Cover" />
+          <img className="sm:w-40 sm:h-40 w-28 h-28 rounded-md border border-black" src={playlist?.images?.[0]?.url || noImageURL} alt="Playlist Cover" />
         </div>
 
         <hr className="my-4 border-black mb-5" />
@@ -123,7 +123,7 @@ function PlaylistPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-[95%]">
             {tracks?.map((track, i) => (
               <div key={i} className="flex gap-2 group">
-                <img className="sm:w-20 w-16 sm:h-20 h-16 rounded-md border-black border" src={track.track.album.images[0]?.url || playlist?.images[0]?.url || noImageURL} alt="Album Image" />
+                <img className="sm:w-20 w-16 sm:h-20 h-16 rounded-md border-black border" src={track.track.album.images?.[0]?.url || playlist?.images[0]?.url || noImageURL} alt="Album Image" />
                 <div className="flex justify-between w-full">
                   <div className="flex flex-col">
                     <HashLink

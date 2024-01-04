@@ -91,7 +91,7 @@ export type Album = {
   };
   href: string;
   id: string;
-  images: Image[];
+  images?: Image[];
   is_playable: boolean;
   name: string;
   release_date: string;
