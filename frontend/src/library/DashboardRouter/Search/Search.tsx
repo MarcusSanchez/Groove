@@ -23,6 +23,17 @@ function Search() {
     if (artists.current!.checked) typeArray.push("artist");
     if (tracks.current!.checked) typeArray.push("track");
 
+    if (typeArray.length === 0) {
+      // if no types are selected, select all of them
+      albums.current!.checked = true;
+      artists.current!.checked = true;
+      tracks.current!.checked = true;
+      typeArray = ["album", "artist", "track"];
+    }
+
+    if (q === "") return;
+    if (q === new URL(window.location.href).searchParams.get("q")) return;
+
     let type = typeArray.join(",");
     let url = new URL(window.location.href);
     url.searchParams.set("q", q);
