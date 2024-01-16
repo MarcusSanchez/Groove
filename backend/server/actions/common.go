@@ -1,19 +1,18 @@
 package actions
 
 import (
-	"GrooveGuru/db"
-	"GrooveGuru/env"
+	"GrooveGuru/pkgs/env"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"time"
 )
 
-const week = time.Hour * 24 * 7
-
-var client = db.Instance()
+const (
+	week = time.Hour * 24 * 7
+)
 
 // setSessionCookies sets the Authorization and Csrf cookies.
-func setSessionCookies(c *fiber.Ctx, authorization, csrf string, expiration time.Time) {
+func setSessionCookies(c *fiber.Ctx, authorization, csrf string, expiration time.Time, env *env.Env) {
 	c.Cookie(&fiber.Cookie{
 		Name:     "Authorization",
 		Value:    authorization,
@@ -41,7 +40,7 @@ func setSessionCookies(c *fiber.Ctx, authorization, csrf string, expiration time
 // This is used over ClearCookie because:
 // Web browsers and other compliant clients will only clear the cookie
 // if the given options are identical to those when creating the cookie
-func expireSessionCookies(c *fiber.Ctx) {
+func expireSessionCookies(c *fiber.Ctx, env *env.Env) {
 	c.Cookie(&fiber.Cookie{
 		Name:     "Authorization",
 		Expires:  time.Now().Add(-1 * time.Hour),

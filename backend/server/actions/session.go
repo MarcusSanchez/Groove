@@ -1,10 +1,10 @@
 package actions
 
 import (
-	"GrooveGuru/db"
-	"GrooveGuru/ent"
-	SpotifyLink "GrooveGuru/ent/spotifylink"
-	User "GrooveGuru/ent/user"
+	"GrooveGuru/pkgs/db"
+	"GrooveGuru/pkgs/ent"
+	SpotifyLink "GrooveGuru/pkgs/ent/spotifylink"
+	User "GrooveGuru/pkgs/ent/user"
 	"errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -15,7 +15,7 @@ import (
 // Register creates a new user and session and sets Authorization cookie.
 // returns a 400 if the username or email is already taken/invalid.
 // returns a 201 if the user and session are created.
-func Register(c *fiber.Ctx, password, username, email string) error {
+func (a *Actions) Register(c *fiber.Ctx, password, username, email string) error {
 	ctx := c.Context()
 
 	// validate user input in order to prevent unnecessary database calls.
@@ -25,7 +25,7 @@ func Register(c *fiber.Ctx, password, username, email string) error {
 	}
 
 	// check if the username is already taken.
-	exists, err := client.User.
+	exists, err := a.client.User.
 		Query().
 		Where(User.UsernameEQ(username)).
 		Exist(ctx)
@@ -37,7 +37,7 @@ func Register(c *fiber.Ctx, password, username, email string) error {
 	}
 
 	// check if an account with the email already exists.
-	exists, err = client.User.
+	exists, err = a.client.User.
 		Query().
 		Where(User.EmailEQ(email)).
 		Exist(ctx)
@@ -56,7 +56,7 @@ func Register(c *fiber.Ctx, password, username, email string) error {
 	}
 
 	// create and save the user.
-	user, err := client.User.Create().
+	user, err := a.client.User.Create().
 		SetEmail(email).
 		SetPassword(string(hashedPassword)).
 		SetUsername(username).
@@ -71,7 +71,7 @@ func Register(c *fiber.Ctx, password, username, email string) error {
 	csrf := uuid.New().String()
 	expiration := time.Now().Add(week)
 
-	_, err = client.Session.Create().
+	_, err = a.client.Session.Create().
 		SetToken(token).
 		SetUser(user).
 		SetCsrf(csrf).
@@ -82,7 +82,7 @@ func Register(c *fiber.Ctx, password, username, email string) error {
 		return internalServerError(c, "error creating session")
 	}
 
-	setSessionCookies(c, token, csrf, expiration)
+	setSessionCookies(c, token, csrf, expiration, a.env)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"acknowledged": true,
@@ -97,11 +97,11 @@ func Register(c *fiber.Ctx, password, username, email string) error {
 // Login creates a new session and sets Authorization cookie.
 // returns a 400 if the username does not exist or the password is incorrect.
 // returns a 201 if the session is created.
-func Login(c *fiber.Ctx, username, password string) error {
+func (a *Actions) Login(c *fiber.Ctx, username, password string) error {
 	ctx := c.Context()
 
 	// grab user from database.
-	user, err := client.User.
+	user, err := a.client.User.
 		Query().
 		Where(User.UsernameEQ(username)).
 		First(ctx)
@@ -126,7 +126,7 @@ func Login(c *fiber.Ctx, username, password string) error {
 	csrf := uuid.New().String()
 	expiration := time.Now().Add(week)
 
-	_, err = client.Session.Create().
+	_, err = a.client.Session.Create().
 		SetToken(token).
 		SetUser(user).
 		SetCsrf(csrf).
@@ -137,7 +137,7 @@ func Login(c *fiber.Ctx, username, password string) error {
 		return internalServerError(c, "error creating session")
 	}
 
-	setSessionCookies(c, token, csrf, expiration)
+	setSessionCookies(c, token, csrf, expiration, a.env)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"acknowledged": true,
@@ -150,28 +150,28 @@ func Login(c *fiber.Ctx, username, password string) error {
 
 // Logout deletes the session and clears the Authorization cookie.
 // returns a 204 if the session is deleted.
-func Logout(c *fiber.Ctx) error {
+func (a *Actions) Logout(c *fiber.Ctx) error {
 	ctx := c.Context()
 	session := c.Locals("session").(*ent.Session)
 
-	err := client.Session.DeleteOne(session).Exec(ctx)
+	err := a.client.Session.DeleteOne(session).Exec(ctx)
 	if err != nil {
 		logError("Logout", "delete session", err)
 		// we don't need to alert the user this failed. (it shouldn't fail anyway)
 		// they will lose access to their account, and the session background worker will clean it up.
 	}
 
-	expireSessionCookies(c)
+	expireSessionCookies(c, a.env)
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
 // Authenticate resets the session expiration and returns the user's username, email, and status for spotify link.
 // returns a 200 if the session is updated.
-func Authenticate(c *fiber.Ctx) error {
+func (a *Actions) Authenticate(c *fiber.Ctx) error {
 	ctx := c.Context()
 	session := c.Locals("session").(*ent.Session)
 
-	user, err := client.User.
+	user, err := a.client.User.
 		Query().
 		Where(User.IDEQ(session.UserID)).
 		First(ctx)
@@ -189,10 +189,10 @@ func Authenticate(c *fiber.Ctx) error {
 	}
 
 	// refresh cookie expiration with same values.
-	setSessionCookies(c, session.Token, session.Csrf, expiration)
+	setSessionCookies(c, session.Token, session.Csrf, expiration, a.env)
 
 	// check for spotify link.
-	exists, err := client.SpotifyLink.
+	exists, err := a.client.SpotifyLink.
 		Query().
 		Where(SpotifyLink.UserIDEQ(session.UserID)).
 		Exist(ctx)

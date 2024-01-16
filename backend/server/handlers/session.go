@@ -1,12 +1,11 @@
 package handlers
 
 import (
-	"GrooveGuru/router/actions"
 	"github.com/gofiber/fiber/v2"
 	"strings"
 )
 
-func Register(c *fiber.Ctx) error {
+func (h *Handlers) Register(c *fiber.Ctx) error {
 
 	type RegisterUserPayload struct {
 		Email    string `json:"email"`
@@ -19,7 +18,7 @@ func Register(c *fiber.Ctx) error {
 		return c.Status(400).SendString("Invalid JSON")
 	}
 
-	response := actions.Register(c,
+	response := h.actions.Register(c,
 		payload.Password,
 		payload.Username,
 		strings.ToLower(payload.Email),
@@ -27,7 +26,7 @@ func Register(c *fiber.Ctx) error {
 	return response
 }
 
-func Login(c *fiber.Ctx) error {
+func (h *Handlers) Login(c *fiber.Ctx) error {
 
 	type LoginPayload struct {
 		Username string `json:"username"`
@@ -39,19 +38,19 @@ func Login(c *fiber.Ctx) error {
 		return c.Status(400).SendString("Invalid JSON")
 	}
 
-	response := actions.Login(c,
+	response := h.actions.Login(c,
 		payload.Username,
 		payload.Password,
 	)
 	return response
 }
 
-func Logout(c *fiber.Ctx) error {
-	response := actions.Logout(c)
+func (h *Handlers) Logout(c *fiber.Ctx) error {
+	response := h.actions.Logout(c)
 	return response
 }
 
-func Authenticate(c *fiber.Ctx) error {
-	response := actions.Authenticate(c)
+func (h *Handlers) Authenticate(c *fiber.Ctx) error {
+	response := h.actions.Authenticate(c)
 	return response
 }

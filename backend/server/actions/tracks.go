@@ -12,7 +12,7 @@ import (
 // returns 400 if the track-id is invalid.
 // returns 404 if the track is not found.
 // returns 200 if the track is found.
-func GetTrack(c *fiber.Ctx, trackID string) error {
+func (a *Actions) GetTrack(c *fiber.Ctx, trackID string) error {
 	access := c.Locals("access").(string)
 
 	spotify, response := trackRequest(c,

@@ -12,7 +12,7 @@ import (
 // returns 400 if the album-id is invalid.
 // returns 404 if the album is not found.
 // returns 200 with the album data if successful.
-func GetAlbum(c *fiber.Ctx, albumID string) error {
+func (*Actions) GetAlbum(c *fiber.Ctx, albumID string) error {
 	access := c.Locals("access").(string)
 
 	spotify, response := albumRequest(c,
@@ -30,7 +30,7 @@ func GetAlbum(c *fiber.Ctx, albumID string) error {
 // returns 400 if the album-id is invalid.
 // returns 404 if the album is not found.
 // returns 200 with the album tracks if successful.
-func GetAlbumTracks(c *fiber.Ctx, albumID string) error {
+func (*Actions) GetAlbumTracks(c *fiber.Ctx, albumID string) error {
 	access := c.Locals("access").(string)
 
 	spotify, response := albumRequest(c,

@@ -1,21 +1,29 @@
 package main
 
 import (
-	"GrooveGuru/db"
-	"GrooveGuru/env"
-	"GrooveGuru/router"
-	"GrooveGuru/router/middleware"
-	"github.com/gofiber/fiber/v2"
+	"GrooveGuru/pkgs/db"
+	"GrooveGuru/pkgs/env"
+	"GrooveGuru/server"
+	"GrooveGuru/server/actions"
+	"GrooveGuru/server/handlers"
+	"GrooveGuru/server/middleware"
+
 	_ "github.com/lib/pq"
+	"go.uber.org/fx"
 )
 
 func main() {
-	db.Migrations()
-	defer db.Close()
-
-	app := fiber.New()
-	middleware.Attach(app)
-	router.Start(app)
-
-	_ = app.Listen(":" + env.Port)
+	fx.New(
+		fx.Provide(
+			db.ProvideClient,
+			env.ProvideEnvVars,
+			middleware.ProvideMiddlewares,
+			handlers.ProvideHandlers,
+			actions.ProvideActions,
+		),
+		fx.Invoke(
+			server.InvokeFiber,
+			db.InvokeScheduler,
+		),
+	).Run()
 }

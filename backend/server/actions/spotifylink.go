@@ -1,10 +1,9 @@
 package actions
 
 import (
-	"GrooveGuru/ent"
-	OAuthState "GrooveGuru/ent/oauthstate"
-	SpotifyLink "GrooveGuru/ent/spotifylink"
-	"GrooveGuru/env"
+	"GrooveGuru/pkgs/ent"
+	OAuthState "GrooveGuru/pkgs/ent/oauthstate"
+	SpotifyLink "GrooveGuru/pkgs/ent/spotifylink"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -38,7 +37,7 @@ type (
 // LinkSpotify creates a SpotifyLink and sends Spotify
 // Authorization page that the client will redirect the user to.
 // Returns 200 if successful.
-func LinkSpotify(c *fiber.Ctx) error {
+func (a *Actions) LinkSpotify(c *fiber.Ctx) error {
 	session := c.Locals("session").(*ent.Session)
 	ctx := c.Context()
 
@@ -46,7 +45,7 @@ func LinkSpotify(c *fiber.Ctx) error {
 	state := strings.ReplaceAll(uuid.New().String(), "-", "")[:16]
 
 	// invalidate any previous state for this user.
-	_, err := client.OAuthState.
+	_, err := a.client.OAuthState.
 		Delete().
 		Where(OAuthState.UserIDEQ(session.UserID)).
 		Exec(ctx)
@@ -56,7 +55,7 @@ func LinkSpotify(c *fiber.Ctx) error {
 	}
 
 	// set state in OAuth-Store for later verification.
-	_, err = client.OAuthState.Create().
+	_, err = a.client.OAuthState.Create().
 		SetState(state).
 		SetExpiration(time.Now().Add(30 * time.Minute)).
 		SetUserID(session.UserID).
@@ -69,9 +68,9 @@ func LinkSpotify(c *fiber.Ctx) error {
 	baseURL, _ := url.Parse("https://accounts.spotify.com/authorize")
 	baseURL.RawQuery = urlSearchParams(params{
 		"response_type": "code",
-		"client_id":     env.SpotifyClient,
+		"client_id":     a.env.SpotifyClient,
 		"scope":         strings.Join(scope, " "),
-		"redirect_uri":  env.BackendURL + "/api/spotify/callback",
+		"redirect_uri":  a.env.BackendURL + "/api/spotify/callback",
 		"state":         state,
 		"access_type":   accessType,
 	})
@@ -83,12 +82,12 @@ func LinkSpotify(c *fiber.Ctx) error {
 // It verifies the state and retrieves the access token and refresh token using the code.
 // It then saves the tokens as a SpotifyLink, successfully linking Groove and Spotify accounts.
 // Returns 201 if successful.
-func SpotifyCallback(c *fiber.Ctx, code, state string) error {
+func (a *Actions) SpotifyCallback(c *fiber.Ctx, code, state string) error {
 	session := c.Locals("session").(*ent.Session)
 	ctx := c.Context()
 
 	// verify state to prevent CSRF.
-	storedState, err := client.OAuthState.
+	storedState, err := a.client.OAuthState.
 		Query().
 		Where(OAuthState.UserIDEQ(session.UserID)).
 		First(ctx)
@@ -114,14 +113,14 @@ func SpotifyCallback(c *fiber.Ctx, code, state string) error {
 	}
 
 	// clear state from store
-	err = client.OAuthState.DeleteOne(storedState).Exec(ctx)
+	err = a.client.OAuthState.DeleteOne(storedState).Exec(ctx)
 	if err != nil {
-		// no need to alert client. background worker will handle it.
+		// no need to alert a.client. background worker will handle it.
 		logError("SpotifyCallback", "Deleting state", err)
 	}
 
 	// create base64 encoded string of client id and secret. (as per spotify docs)
-	credentials := env.SpotifyClient + ":" + env.SpotifySecret
+	credentials := a.env.SpotifyClient + ":" + a.env.SpotifySecret
 	encodedCredentials := base64.StdEncoding.EncodeToString([]byte(credentials))
 
 	// retrieve access token and refresh token from spotify.
@@ -133,7 +132,7 @@ func SpotifyCallback(c *fiber.Ctx, code, state string) error {
 		}).
 		SetFormData(form{
 			"code":         code,
-			"redirect_uri": env.BackendURL + "/api/spotify/callback",
+			"redirect_uri": a.env.BackendURL + "/api/spotify/callback",
 			"grant_type":   "authorization_code",
 		}).
 		Post("https://accounts.spotify.com/api/token")
@@ -154,7 +153,7 @@ func SpotifyCallback(c *fiber.Ctx, code, state string) error {
 	}
 
 	// save access token and refresh token as SpotifyLink.
-	_, err = client.SpotifyLink.Create().
+	_, err = a.client.SpotifyLink.Create().
 		SetAccessToken(payload.AccessToken).
 		// Spotify's Access-Token expire after 1 hour, so we set the expiration to 58 minutes to be safe.
 		SetAccessTokenExpiration(time.Now().Add(58 * time.Minute)).
@@ -166,17 +165,17 @@ func SpotifyCallback(c *fiber.Ctx, code, state string) error {
 		return internalServerError(c, "error linking spotify")
 	}
 
-	return c.Redirect(env.FrontendURL+"/dashboard/profile", 302)
+	return c.Redirect(a.env.FrontendURL+"/dashboard/profile", 302)
 }
 
 // UnlinkSpotify deletes the SpotifyLink for the user.
 // Returns 204 no content if successful.
-func UnlinkSpotify(c *fiber.Ctx) error {
+func (a *Actions) UnlinkSpotify(c *fiber.Ctx) error {
 	session := c.Locals("session").(*ent.Session)
 	ctx := c.Context()
 
 	// check if user has a spotify link.
-	link, err := client.SpotifyLink.
+	link, err := a.client.SpotifyLink.
 		Query().
 		Where(SpotifyLink.UserIDEQ(session.UserID)).
 		First(ctx)
@@ -188,7 +187,7 @@ func UnlinkSpotify(c *fiber.Ctx) error {
 	}
 
 	// delete spotify link.
-	err = client.SpotifyLink.DeleteOne(link).Exec(ctx)
+	err = a.client.SpotifyLink.DeleteOne(link).Exec(ctx)
 	if err != nil {
 		logError("UnlinkSpotify", "Deleting spotify link", err)
 		return internalServerError(c, "error unlinking spotify")
@@ -200,7 +199,7 @@ func UnlinkSpotify(c *fiber.Ctx) error {
 // GetCurrentUser retrieves the current user's ID if they are linked to Spotify.
 // required to grab the user's playlists.
 // Returns 200 if successful.
-func GetCurrentUser(c *fiber.Ctx) error {
+func (a *Actions) GetCurrentUser(c *fiber.Ctx) error {
 	access := c.Locals("access").(string)
 
 	// get current user from spotify.

@@ -1,26 +1,25 @@
 package handlers
 
 import (
-	"GrooveGuru/router/actions"
 	"github.com/gofiber/fiber/v2"
 )
 
-func GetAllPlaylists(c *fiber.Ctx) error {
-	response := actions.GetAllPlaylists(c)
+func (h *Handlers) GetAllPlaylists(c *fiber.Ctx) error {
+	response := h.actions.GetAllPlaylists(c)
 	return response
 }
 
-func GetPlaylistWithTracks(c *fiber.Ctx) error {
+func (h *Handlers) GetPlaylistWithTracks(c *fiber.Ctx) error {
 	playlistID := c.Params("id")
 	if playlistID == "" {
 		return c.Status(400).SendString("invalid playlist-id")
 	}
 
-	response := actions.GetPlaylist(c, playlistID)
+	response := h.actions.GetPlaylist(c, playlistID)
 	return response
 }
 
-func GetMorePlaylistTracks(c *fiber.Ctx) error {
+func (h *Handlers) GetMorePlaylistTracks(c *fiber.Ctx) error {
 	playlistID := c.Params("id")
 	if playlistID == "" {
 		return c.Status(400).SendString("invalid playlist-id")
@@ -31,11 +30,11 @@ func GetMorePlaylistTracks(c *fiber.Ctx) error {
 		return c.Status(400).SendString("invalid offset")
 	}
 
-	response := actions.GetMorePlaylistTracks(c, playlistID, offset)
+	response := h.actions.GetMorePlaylistTracks(c, playlistID, offset)
 	return response
 }
 
-func AddTrackToPlaylist(c *fiber.Ctx) error {
+func (h *Handlers) AddTrackToPlaylist(c *fiber.Ctx) error {
 	playlistID := c.Params("id")
 	if playlistID == "" {
 		return c.Status(400).SendString("invalid playlist-id")
@@ -46,11 +45,11 @@ func AddTrackToPlaylist(c *fiber.Ctx) error {
 		return c.Status(400).SendString("invalid track-id")
 	}
 
-	response := actions.AddTrackToPlaylist(c, playlistID, trackID)
+	response := h.actions.AddTrackToPlaylist(c, playlistID, trackID)
 	return response
 }
 
-func RemoveTrackFromPlaylist(c *fiber.Ctx) error {
+func (h *Handlers) RemoveTrackFromPlaylist(c *fiber.Ctx) error {
 	playlistID := c.Params("id")
 	if playlistID == "" {
 		return c.Status(400).SendString("invalid playlist-id")
@@ -61,6 +60,6 @@ func RemoveTrackFromPlaylist(c *fiber.Ctx) error {
 		return c.Status(400).SendString("invalid track-id")
 	}
 
-	response := actions.RemoveTrackFromPlaylist(c, playlistID, trackID)
+	response := h.actions.RemoveTrackFromPlaylist(c, playlistID, trackID)
 	return response
 }

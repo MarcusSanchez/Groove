@@ -10,7 +10,7 @@ import (
 
 // GetAllPlaylists returns all playlists for the current user.
 // returns 200 on success.
-func GetAllPlaylists(c *fiber.Ctx) error {
+func (*Actions) GetAllPlaylists(c *fiber.Ctx) error {
 	access := c.Locals("access").(string)
 
 	spotify, response := playlistRequest(c,
@@ -28,7 +28,7 @@ func GetAllPlaylists(c *fiber.Ctx) error {
 // returns 200 on success.
 // returns 404 if the playlist is not found.
 // returns 400 if the playlist-id is invalid.
-func GetPlaylist(c *fiber.Ctx, playlistID string) error {
+func (*Actions) GetPlaylist(c *fiber.Ctx, playlistID string) error {
 	access := c.Locals("access").(string)
 
 	spotify, response := playlistRequest(c,
@@ -44,7 +44,7 @@ func GetPlaylist(c *fiber.Ctx, playlistID string) error {
 
 // GetMorePlaylistTracks returns a playlist with the next 100 tracks with the given id.
 // returns 200 on success.
-func GetMorePlaylistTracks(c *fiber.Ctx, playlistID string, offset int) error {
+func (*Actions) GetMorePlaylistTracks(c *fiber.Ctx, playlistID string, offset int) error {
 	access := c.Locals("access").(string)
 
 	spotify, response := playlistRequest(c,
@@ -63,7 +63,7 @@ func GetMorePlaylistTracks(c *fiber.Ctx, playlistID string, offset int) error {
 // returns 404 if the playlist is not found.
 // returns 403 if the playlist is not collaborative.
 // returns 400 if the playlist-id is invalid.
-func AddTrackToPlaylist(c *fiber.Ctx, playlistID, trackID string) error {
+func (*Actions) AddTrackToPlaylist(c *fiber.Ctx, playlistID, trackID string) error {
 	access := c.Locals("access").(string)
 
 	endpoint := "/playlists/" + playlistID + "/tracks"
@@ -104,7 +104,7 @@ func AddTrackToPlaylist(c *fiber.Ctx, playlistID, trackID string) error {
 // returns 404 if the playlist is not found.
 // returns 403 if the playlist is not collaborative.
 // returns 400 if the playlist-id is invalid.
-func RemoveTrackFromPlaylist(c *fiber.Ctx, playlistID, trackID string) error {
+func (*Actions) RemoveTrackFromPlaylist(c *fiber.Ctx, playlistID, trackID string) error {
 	access := c.Locals("access").(string)
 
 	endpoint := "/playlists/" + playlistID + "/tracks"

@@ -12,7 +12,7 @@ import (
 // Returns 400 if the artist-id is invalid.
 // Returns 404 if the artist is not found.
 // Returns 200 with the artist data if successful.
-func GetArtist(c *fiber.Ctx, artistID string) error {
+func (*Actions) GetArtist(c *fiber.Ctx, artistID string) error {
 	access := c.Locals("access").(string)
 
 	spotify, response := artistRequest(c,
@@ -30,7 +30,7 @@ func GetArtist(c *fiber.Ctx, artistID string) error {
 // Returns 400 if the artist-id is invalid.
 // Returns 404 if the artist is not found.
 // Returns 200 with the artist data if successful.
-func GetRelatedArtists(c *fiber.Ctx, artistID string) error {
+func (*Actions) GetRelatedArtists(c *fiber.Ctx, artistID string) error {
 	access := c.Locals("access").(string)
 
 	spotify, response := artistRequest(c,
@@ -48,7 +48,7 @@ func GetRelatedArtists(c *fiber.Ctx, artistID string) error {
 // Returns 400 if the artist-id is invalid.
 // Returns 404 if the artist is not found.
 // Returns 200 with the artist data if successful.
-func GetArtistTopTracks(c *fiber.Ctx, artistID string) error {
+func (*Actions) GetArtistTopTracks(c *fiber.Ctx, artistID string) error {
 	access := c.Locals("access").(string)
 
 	spotify, response := artistRequest(c,
@@ -62,7 +62,7 @@ func GetArtistTopTracks(c *fiber.Ctx, artistID string) error {
 	return artistResponse(c, spotify)
 }
 
-func GetArtistAlbums(c *fiber.Ctx, artistID string) error {
+func (*Actions) GetArtistAlbums(c *fiber.Ctx, artistID string) error {
 	access := c.Locals("access").(string)
 
 	spotify, response := artistRequest(c,
