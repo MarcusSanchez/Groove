@@ -6,21 +6,24 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	recovery "github.com/gofiber/fiber/v2/middleware/recover"
+	"go.uber.org/fx"
 	"groove/pkgs/ent"
 	SpotifyLink "groove/pkgs/ent/spotifylink"
 	"groove/pkgs/env"
-	"log"
+	. "groove/pkgs/util"
 )
 
 type Middlewares struct {
-	client *ent.Client
-	env    *env.Env
+	client     *ent.Client
+	env        *env.Env
+	shutdowner fx.Shutdowner
 }
 
-func ProvideMiddlewares(client *ent.Client, env *env.Env) *Middlewares {
+func ProvideMiddlewares(shutdowner fx.Shutdowner, client *ent.Client, env *env.Env) *Middlewares {
 	return &Middlewares{
-		client: client,
-		env:    env,
+		client:     client,
+		env:        env,
+		shutdowner: shutdowner,
 	}
 }
 
@@ -64,7 +67,8 @@ func (m *Middlewares) defaultAccessToken() (*ent.SpotifyLink, error) {
 		First(context.Background())
 	if err != nil {
 		if ent.IsNotFound(err) {
-			log.Fatal("default access token not set")
+			LogError("defaultAccessToken", "default user not set or deleted", err)
+			_ = m.shutdowner.Shutdown()
 		}
 		return nil, err
 	}

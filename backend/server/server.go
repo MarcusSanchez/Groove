@@ -4,12 +4,13 @@ import (
 	"context"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/fx"
+	"groove/pkgs/env"
+	. "groove/pkgs/util"
 	"groove/server/handlers"
 	"groove/server/middleware"
-	"log"
 )
 
-func InvokeFiber(lc fx.Lifecycle, shutdowner fx.Shutdowner, handlers *handlers.Handlers, mw *middleware.Middlewares) {
+func InvokeFiber(lc fx.Lifecycle, shutdowner fx.Shutdowner, handlers *handlers.Handlers, mw *middleware.Middlewares, env *env.Env) {
 	app := fiber.New()
 	mw.Attach(app)
 	SetupEndpoints(app, handlers, mw)
@@ -17,8 +18,8 @@ func InvokeFiber(lc fx.Lifecycle, shutdowner fx.Shutdowner, handlers *handlers.H
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
 			go func() {
-				if err := app.Listen(":3000"); err != nil {
-					log.Println("failed OnStart for InvokeFiber: ", err)
+				if err := app.Listen(env.Port); err != nil {
+					LogError("InvokeFiber", "failed to listen", err)
 					_ = shutdowner.Shutdown()
 				}
 			}()
