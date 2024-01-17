@@ -7,13 +7,14 @@ import (
 	"go.uber.org/fx"
 	"groove/pkgs/ent"
 	"groove/pkgs/env"
-	"log"
+	. "groove/pkgs/util"
 )
 
-func ProvideClient(lc fx.Lifecycle, env *env.Env) *ent.Client {
+func ProvideClient(lc fx.Lifecycle, shutdowner fx.Shutdowner, env *env.Env) *ent.Client {
 	client, err := ent.Open("postgres", env.PgURI)
 	if err != nil {
-		log.Fatal("failed connecting to postgresql: ", err)
+		LogError("ProvideClient", "failed connecting to postgresql", err)
+		_ = shutdowner.Shutdown()
 	}
 
 	lc.Append(fx.Hook{

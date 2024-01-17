@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	"go.uber.org/fx"
-	"log"
+	. "groove/pkgs/util"
 	"os"
 )
 
@@ -26,7 +26,7 @@ func ProvideEnvVars(shutdowner fx.Shutdowner) *Env {
 	// if in production, variables should already be set.
 	if os.Getenv("PROD") == "" {
 		if err := godotenv.Load("./pkgs/env/.env"); err != nil {
-			log.Println("failed to load .env file: ", err)
+			LogError("ProvideEnvVars", "failed to load .env file: ", err)
 			_ = shutdowner.Shutdown()
 		}
 	}
@@ -49,7 +49,7 @@ func ProvideEnvVars(shutdowner fx.Shutdowner) *Env {
 	}
 
 	if err := env.validate(); err != nil {
-		log.Println("failed to validate environment variables: ", err)
+		LogError("ProvideEnvVars", "failed to validate environment variables: ", err)
 		_ = shutdowner.Shutdown()
 	}
 	return env
