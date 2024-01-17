@@ -78,7 +78,7 @@ func (a *Actions) Register(c *fiber.Ctx, password, username, email string) error
 		LogError("Register", "create session", err)
 		return InternalServerError(c, "error creating session")
 	}
-	SetSessionCookies(c, token, csrf, expiration, a.env)
+	SetSessionCookies(c, token, csrf, expiration, a.env.SameSite, a.env.Secure)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"acknowledged": true,
@@ -133,7 +133,7 @@ func (a *Actions) Login(c *fiber.Ctx, username, password string) error {
 		LogError("Login", "create session", err)
 		return InternalServerError(c, "error creating session")
 	}
-	SetSessionCookies(c, token, csrf, expiration, a.env)
+	SetSessionCookies(c, token, csrf, expiration, a.env.SameSite, a.env.Secure)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"acknowledged": true,
@@ -156,7 +156,7 @@ func (a *Actions) Logout(c *fiber.Ctx) error {
 		// they will lose access to their account, and the session background worker will clean it up.
 	}
 
-	ExpireSessionCookies(c, a.env)
+	ExpireSessionCookies(c, a.env.SameSite, a.env.Secure)
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
@@ -183,7 +183,7 @@ func (a *Actions) Authenticate(c *fiber.Ctx) error {
 	}
 
 	// refresh cookie expiration with same values.
-	SetSessionCookies(c, session.Token, session.Csrf, expiration, a.env)
+	SetSessionCookies(c, session.Token, session.Csrf, expiration, a.env.SameSite, a.env.Secure)
 
 	// check for spotify link.
 	exists, err := a.client.SpotifyLink.

@@ -3,7 +3,6 @@ package util
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"groove/pkgs/env"
 	"net/url"
 	"time"
 )
@@ -34,14 +33,14 @@ func LogError(fn, context string, err error) {
 }
 
 // SetSessionCookies sets the Authorization and Csrf cookies.
-func SetSessionCookies(c *fiber.Ctx, authorization, csrf string, expiration time.Time, env *env.Env) {
+func SetSessionCookies(c *fiber.Ctx, authorization, csrf string, expiration time.Time, sameSite string, secure bool) {
 	c.Cookie(&fiber.Cookie{
 		Name:     "Authorization",
 		Value:    authorization,
 		Expires:  expiration,
 		HTTPOnly: true,
-		SameSite: env.SameSite,
-		Secure:   env.Secure,
+		SameSite: sameSite,
+		Secure:   secure,
 	})
 
 	c.Cookie(&fiber.Cookie{
@@ -52,27 +51,27 @@ func SetSessionCookies(c *fiber.Ctx, authorization, csrf string, expiration time
 		// This isn't a security risk because the cookie is for CSRF protection;
 		// If XSS is present, the attacker can already do anything they want.
 		HTTPOnly: false,
-		SameSite: env.SameSite,
-		Secure:   env.Secure,
+		SameSite: sameSite,
+		Secure:   secure,
 	})
 }
 
 // ExpireSessionCookies deletes the Authorization and Csrf cookies.
-func ExpireSessionCookies(c *fiber.Ctx, env *env.Env) {
+func ExpireSessionCookies(c *fiber.Ctx, sameSite string, secure bool) {
 	c.Cookie(&fiber.Cookie{
 		Name:     "Authorization",
 		Expires:  time.Now().Add(-1 * time.Hour),
 		HTTPOnly: true,
-		SameSite: env.SameSite,
-		Secure:   env.Secure,
+		SameSite: sameSite,
+		Secure:   secure,
 	})
 
 	c.Cookie(&fiber.Cookie{
 		Name:     "Csrf",
 		Expires:  time.Now().Add(-1 * time.Hour),
 		HTTPOnly: false,
-		SameSite: env.SameSite,
-		Secure:   env.Secure,
+		SameSite: sameSite,
+		Secure:   secure,
 	})
 }
 

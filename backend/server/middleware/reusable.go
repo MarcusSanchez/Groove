@@ -32,7 +32,7 @@ func (m *Middlewares) RedirectAuthorized(c *fiber.Ctx) error {
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			ExpireSessionCookies(c, m.env)
+			ExpireSessionCookies(c, m.env.SameSite, m.env.Secure)
 			return c.Next()
 		}
 		LogError("RedirectAuthorized[MIDDLEWARE]", "checking session", err)
@@ -41,7 +41,7 @@ func (m *Middlewares) RedirectAuthorized(c *fiber.Ctx) error {
 
 	// check if session has expired.
 	if session.Expiration.Before(time.Now()) {
-		ExpireSessionCookies(c, m.env)
+		ExpireSessionCookies(c, m.env.SameSite, m.env.Secure)
 		return c.Next()
 	}
 
@@ -65,7 +65,7 @@ func (m *Middlewares) AuthorizeAny(c *fiber.Ctx) error {
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			ExpireSessionCookies(c, m.env)
+			ExpireSessionCookies(c, m.env.SameSite, m.env.Secure)
 			return Unauthorized(c, "session not found")
 		}
 		LogError("AuthorizeAny[MIDDLEWARE]", "checking session", err)
@@ -74,7 +74,7 @@ func (m *Middlewares) AuthorizeAny(c *fiber.Ctx) error {
 
 	// check if session has expired.
 	if session.Expiration.Before(time.Now()) {
-		ExpireSessionCookies(c, m.env)
+		ExpireSessionCookies(c, m.env.SameSite, m.env.Secure)
 		return Unauthorized(c, "session expired")
 	}
 
@@ -125,7 +125,7 @@ func (m *Middlewares) CheckCSRF(c *fiber.Ctx) error {
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			ExpireSessionCookies(c, m.env)
+			ExpireSessionCookies(c, m.env.SameSite, m.env.Secure)
 			return Unauthorized(c, "session not found")
 		}
 		LogError("CheckCSRF[MIDDLEWARE]", "checking session", err)
@@ -134,7 +134,7 @@ func (m *Middlewares) CheckCSRF(c *fiber.Ctx) error {
 
 	// check if session has expired.
 	if session.Expiration.Before(time.Now()) {
-		ExpireSessionCookies(c, m.env)
+		ExpireSessionCookies(c, m.env.SameSite, m.env.Secure)
 		return Unauthorized(c, "session expired")
 	}
 
@@ -274,7 +274,7 @@ func (m *Middlewares) AuthorizeLinked(c *fiber.Ctx) error {
 		session, err = m.client.Session.Query().Where(Session.TokenEQ(authorization)).First(ctx)
 		if err != nil {
 			if ent.IsNotFound(err) {
-				ExpireSessionCookies(c, m.env)
+				ExpireSessionCookies(c, m.env.SameSite, m.env.Secure)
 				return Unauthorized(c, "session not found")
 			}
 			LogError("AuthorizeAny[MIDDLEWARE]", "checking session", err)
@@ -283,7 +283,7 @@ func (m *Middlewares) AuthorizeLinked(c *fiber.Ctx) error {
 
 		// check if session has expired.
 		if session.Expiration.Before(time.Now()) {
-			ExpireSessionCookies(c, m.env)
+			ExpireSessionCookies(c, m.env.SameSite, m.env.Secure)
 			return Unauthorized(c, "session expired")
 		}
 	}

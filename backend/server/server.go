@@ -18,7 +18,7 @@ func InvokeFiber(lc fx.Lifecycle, shutdowner fx.Shutdowner, handlers *handlers.H
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
 			go func() {
-				if err := app.Listen(env.Port); err != nil {
+				if err := app.Listen(":" + env.Port); err != nil {
 					LogError("InvokeFiber", "failed to listen", err)
 					_ = shutdowner.Shutdown()
 				}
