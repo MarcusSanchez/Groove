@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	entgo.io/ent v0.12.4
+	github.com/MarcusSanchez/go-parse v1.0.2
 	github.com/go-resty/resty/v2 v2.10.0
 	github.com/gofiber/fiber/v2 v2.50.0
 	github.com/google/uuid v1.4.0

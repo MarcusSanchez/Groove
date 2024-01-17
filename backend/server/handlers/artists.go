@@ -5,42 +5,17 @@ import (
 )
 
 func (h *Handlers) GetArtist(c *fiber.Ctx) error {
-	artistID := c.Params("id")
-	if artistID == "" {
-		return c.Status(400).SendString("invalid artist-id")
-	}
-
-	response := h.actions.GetArtist(c, artistID)
-	return response
+	return h.actions.GetArtist(c, c.Params("id"))
 }
 
 func (h *Handlers) GetRelatedArtists(c *fiber.Ctx) error {
-	artistID := c.Params("id")
-	if artistID == "" {
-		return c.Status(400).SendString("invalid artist-id")
-	}
-
-	response := h.actions.GetRelatedArtists(c, artistID)
-	return response
-
+	return h.actions.GetRelatedArtists(c, c.Params("id"))
 }
 
 func (h *Handlers) GetArtistTopTracks(c *fiber.Ctx) error {
-	artistID := c.Params("id")
-	if artistID == "" {
-		return c.Status(400).SendString("invalid artist-id")
-	}
-
-	response := h.actions.GetArtistTopTracks(c, artistID)
-	return response
+	return h.actions.GetArtistTopTracks(c, c.Params("id"))
 }
 
 func (h *Handlers) GetArtistAlbums(c *fiber.Ctx) error {
-	artistID := c.Params("id")
-	if artistID == "" {
-		return c.Status(400).SendString("invalid artist-id")
-	}
-
-	response := h.actions.GetArtistAlbums(c, artistID)
-	return response
+	return h.actions.GetArtistAlbums(c, c.Params("id"))
 }

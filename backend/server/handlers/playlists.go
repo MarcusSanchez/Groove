@@ -1,65 +1,42 @@
 package handlers
 
 import (
+	. "GrooveGuru/pkgs/util"
 	"github.com/gofiber/fiber/v2"
+	"strconv"
 )
 
 func (h *Handlers) GetAllPlaylists(c *fiber.Ctx) error {
-	response := h.actions.GetAllPlaylists(c)
-	return response
+	return h.actions.GetAllPlaylists(c)
 }
 
 func (h *Handlers) GetPlaylistWithTracks(c *fiber.Ctx) error {
-	playlistID := c.Params("id")
-	if playlistID == "" {
-		return c.Status(400).SendString("invalid playlist-id")
-	}
-
-	response := h.actions.GetPlaylist(c, playlistID)
-	return response
+	return h.actions.GetPlaylist(c, c.Params("id"))
 }
 
 func (h *Handlers) GetMorePlaylistTracks(c *fiber.Ctx) error {
-	playlistID := c.Params("id")
-	if playlistID == "" {
-		return c.Status(400).SendString("invalid playlist-id")
-	}
-
 	offset := c.QueryInt("offset")
 	if offset == 0 {
-		return c.Status(400).SendString("invalid offset")
+		return BadRequest(c, "invalid offset")
 	}
 
-	response := h.actions.GetMorePlaylistTracks(c, playlistID, offset)
-	return response
+	return h.actions.GetMorePlaylistTracks(c, c.Params("id"), strconv.Itoa(offset))
 }
 
 func (h *Handlers) AddTrackToPlaylist(c *fiber.Ctx) error {
-	playlistID := c.Params("id")
-	if playlistID == "" {
-		return c.Status(400).SendString("invalid playlist-id")
-	}
-
 	trackID := c.Query("id")
 	if trackID == "" {
-		return c.Status(400).SendString("invalid track-id")
+		return BadRequest(c, "track-id is required")
 	}
 
-	response := h.actions.AddTrackToPlaylist(c, playlistID, trackID)
-	return response
+	return h.actions.AddTrackToPlaylist(c, c.Params("id"), trackID)
 }
 
 func (h *Handlers) RemoveTrackFromPlaylist(c *fiber.Ctx) error {
-	playlistID := c.Params("id")
-	if playlistID == "" {
-		return c.Status(400).SendString("invalid playlist-id")
-	}
-
 	trackID := c.Query("id")
 	if trackID == "" {
-		return c.Status(400).SendString("invalid track-id")
+		return BadRequest(c, "track-id is required")
 	}
 
-	response := h.actions.RemoveTrackFromPlaylist(c, playlistID, trackID)
-	return response
+	return h.actions.RemoveTrackFromPlaylist(c, c.Params("id"), trackID)
 }

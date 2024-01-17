@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"regexp"
 )
 
@@ -42,7 +43,7 @@ var userValidators = []validator{
 	},
 }
 
-func ValidateUser(username, email, password string) string {
+func ValidateUser(username, email, password string) error {
 	for _, v := range userValidators {
 		var field string
 
@@ -56,8 +57,8 @@ func ValidateUser(username, email, password string) string {
 		}
 
 		if !v.Regex.MatchString(field) {
-			return v.Message
+			return errors.New(v.Message)
 		}
 	}
-	return ""
+	return nil
 }

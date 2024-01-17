@@ -1,84 +1,59 @@
 package actions
 
 import (
-	"encoding/json"
+	. "GrooveGuru/pkgs/util"
 	"errors"
-	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/gofiber/fiber/v2"
+	"strconv"
 )
 
 // GetAlbum returns the album with the given id.
-// returns 400 if the album-id is invalid.
-// returns 404 if the album is not found.
-// returns 200 with the album data if successful.
 func (*Actions) GetAlbum(c *fiber.Ctx, albumID string) error {
-	access := c.Locals("access").(string)
-
-	spotify, response := albumRequest(c,
-		"/albums/"+albumID+"?market=US",
-		access,
-	)
-	if spotify == nil {
-		return response
-	}
-
-	return albumResponse(c, spotify)
+	return proxyAlbumRequest(c, Proxy{
+		Endpoint: "/albums/" + albumID,
+		Access:   c.Locals("access").(string),
+	})
 }
 
 // GetAlbumTracks returns the tracks of the album with the given id.
+func (*Actions) GetAlbumTracks(c *fiber.Ctx, albumID string) error {
+	return proxyAlbumRequest(c, Proxy{
+		Endpoint: "/albums/" + albumID + "/tracks?limit=50&market=US",
+		Access:   c.Locals("access").(string),
+	})
+}
+
+// proxyAlbumRequest proxies a request to the Spotify API for an album.
+// returns 200 with the album tracks if successful.
 // returns 400 if the album-id is invalid.
 // returns 404 if the album is not found.
-// returns 200 with the album tracks if successful.
-func (*Actions) GetAlbumTracks(c *fiber.Ctx, albumID string) error {
-	access := c.Locals("access").(string)
-
-	spotify, response := albumRequest(c,
-		"/albums/"+albumID+"/tracks?limit=50&market=US",
-		access,
-	)
-	if spotify == nil {
-		return response
-	}
-
-	return albumResponse(c, spotify)
-}
-
-/** helpers **/
-
-// albumRequest proxy request to the spotify api for the given endpoint.
-func albumRequest(c *fiber.Ctx, endpoint, access string) (*resty.Response, error) {
+func proxyAlbumRequest(c *fiber.Ctx, proxy Proxy) error {
 	resp, err := resty.New().R().
-		SetHeaders(headers{
-			"Authorization": "Bearer " + access,
+		SetHeaders(Headers{
+			"Authorization": "Bearer " + proxy.Access,
 			"Accept":        "application/json",
 		}).
-		Get("https://api.spotify.com/v1" + endpoint)
+		Get("https://api.spotify.com/v1" + proxy.Endpoint)
 	if err != nil {
-		logError("albumRequest", "Requesting "+endpoint, err)
-		return nil, internalServerError(c, "error requesting "+c.Path())
+		LogError("proxyAlbumRequest", "Requesting "+proxy.Endpoint, err)
+		return InternalServerError(c, "error requesting "+c.Path())
 	}
 
-	return resp, nil
-}
-
-// albumResponse handles the response from the spotify api.
-func albumResponse(c *fiber.Ctx, resp *resty.Response) error {
 	switch resp.StatusCode() {
-	case 400:
-		return badRequest(c, "invalid album-id")
-	case 404:
-		return badRequest(c, "album not found", 404)
 	case 200:
-		var data map[string]any
-		_ = json.Unmarshal(resp.Body(), &data)
-		return c.Status(200).JSON(data)
+		c.Set("Content-Type", "application/json")
+		return c.Status(fiber.StatusOK).Send(resp.Body())
+	case 400:
+		return BadRequest(c, "invalid album-id")
+	case 404:
+		return BadRequest(c, "album not found", 404)
 	default:
-		logError(
-			"albumResponse",
-			"Requesting "+resp.Request.URL,
-			errors.New(fmt.Sprintln(resp.StatusCode(), ", ", string(resp.Body()))),
+		LogError(
+			"proxyAlbumRequest",
+			"Requesting "+c.Path(),
+			errors.New(strconv.Itoa(resp.StatusCode())+": "+string(resp.Body())),
 		)
-		return internalServerError(c, "error requesting "+c.Path())
+		return InternalServerError(c, "error requesting "+c.Path())
 	}
 }

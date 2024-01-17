@@ -1,40 +1,27 @@
 package handlers
 
 import (
+	. "GrooveGuru/pkgs/util"
 	"github.com/gofiber/fiber/v2"
 )
 
 func (h *Handlers) LinkSpotify(c *fiber.Ctx) error {
-	response := h.actions.LinkSpotify(c)
-	return response
+	return h.actions.LinkSpotify(c)
 }
 
 func (h *Handlers) SpotifyCallback(c *fiber.Ctx) error {
-
-	type CallbackQuery struct {
-		Code  string `query:"code"`
-		State string `query:"state"`
+	code, state := c.Query("code"), c.Query("state")
+	if code == "" || state == "" {
+		return BadRequest(c, "invalid query params")
 	}
 
-	var query CallbackQuery
-	_ = c.QueryParser(&query)
-	if query.Code == "" || query.State == "" {
-		return c.Status(400).SendString("Invalid query params")
-	}
-
-	response := h.actions.SpotifyCallback(c,
-		query.Code,
-		query.State,
-	)
-	return response
+	return h.actions.SpotifyCallback(c, code, state)
 }
 
 func (h *Handlers) UnlinkSpotify(c *fiber.Ctx) error {
-	response := h.actions.UnlinkSpotify(c)
-	return response
+	return h.actions.UnlinkSpotify(c)
 }
 
 func (h *Handlers) GetCurrentUser(c *fiber.Ctx) error {
-	response := h.actions.GetCurrentUser(c)
-	return response
+	return h.actions.GetCurrentUser(c)
 }

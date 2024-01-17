@@ -18,8 +18,7 @@ func ProvideClient(lc fx.Lifecycle, env *env.Env) *ent.Client {
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			err = client.Schema.Create(ctx)
-			if err != nil {
+			if err = client.Schema.Create(ctx); err != nil {
 				return fmt.Errorf("failed creating schema resources: %w", err)
 			}
 			return nil

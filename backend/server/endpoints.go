@@ -3,34 +3,8 @@ package server
 import (
 	"GrooveGuru/server/handlers"
 	"GrooveGuru/server/middleware"
-	"context"
 	"github.com/gofiber/fiber/v2"
-	"go.uber.org/fx"
-	"log"
 )
-
-func InvokeFiber(lc fx.Lifecycle, handlers *handlers.Handlers, mw *middleware.Middlewares) {
-
-	app := fiber.New()
-	mw.Attach(app)
-	SetupEndpoints(app, handlers, mw)
-
-	lc.Append(fx.Hook{
-		OnStart: func(context.Context) error {
-			go func() {
-				err := app.Listen(":3000")
-				if err != nil {
-					log.Fatal(err)
-				}
-			}()
-			return nil
-		},
-		OnStop: func(context.Context) error {
-			return app.Shutdown()
-		},
-	})
-
-}
 
 func SetupEndpoints(app *fiber.App, handlers *handlers.Handlers, mw *middleware.Middlewares) {
 	/** api endpoints **/

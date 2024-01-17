@@ -4,6 +4,7 @@ import (
 	"GrooveGuru/pkgs/ent"
 	OAuthState "GrooveGuru/pkgs/ent/oauthstate"
 	Session "GrooveGuru/pkgs/ent/session"
+	. "GrooveGuru/pkgs/util"
 	"context"
 	"fmt"
 	"go.uber.org/fx"
@@ -80,7 +81,7 @@ func (s *Scheduler) CleanSession() {
 		Where(Session.ExpirationLT(time.Now())).
 		Exec(context.Background())
 	if err != nil {
-		logError("SessionCleaner[CRON]", "Worker", err)
+		LogError("SessionCleaner[CRON]", "Worker", err)
 	} else {
 		fmt.Printf(
 			"%s [SUCCESS] Session Cleared (affected: %d)\n",
@@ -99,7 +100,7 @@ func (s *Scheduler) CleanOAuthStore() {
 		Where(OAuthState.ExpirationLT(time.Now())).
 		Exec(context.Background())
 	if err != nil {
-		logError("OAuthStoreCleaner[CRON]", "Worker", err)
+		LogError("OAuthStoreCleaner[CRON]", "Worker", err)
 	} else {
 		fmt.Printf(
 			"%s [SUCCESS] OAuthStore Cleared (affected: %d)\n",
@@ -107,15 +108,4 @@ func (s *Scheduler) CleanOAuthStore() {
 			affected,
 		)
 	}
-}
-
-/** helpers **/
-
-// logError formats and prints an error with context.
-func logError(fn, context string, err error) {
-	fmt.Printf(
-		"%s [ERROR] [Function: %s (Context: %s)] %s\n",
-		time.Now().Format("15:04:05"),
-		fn, context, err.Error(),
-	)
 }

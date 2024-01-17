@@ -1,11 +1,11 @@
 package actions
 
 import (
-	"encoding/json"
+	. "GrooveGuru/pkgs/util"
 	"errors"
-	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/gofiber/fiber/v2"
+	"strconv"
 )
 
 // Search searches Spotify for a given query.
@@ -14,7 +14,7 @@ import (
 func (*Actions) Search(c *fiber.Ctx, query, Type, market string, limit string) error {
 	access := c.Locals("access").(string)
 
-	qParams := urlSearchParams(params{
+	qParams := URLSearchParams(Params{
 		"q":      query,
 		"type":   Type,
 		"market": market,
@@ -22,29 +22,28 @@ func (*Actions) Search(c *fiber.Ctx, query, Type, market string, limit string) e
 	})
 
 	resp, err := resty.New().R().
-		SetHeaders(headers{
+		SetHeaders(Headers{
 			"Authorization": "Bearer " + access,
 			"Accept":        "application/json",
 		}).
 		Get("https://api.spotify.com/v1/search?" + qParams)
 	if err != nil {
-		logError("Search", "Requesting ", err)
-		return internalServerError(c, "error requesting "+c.Path())
+		LogError("Search", "Requesting ", err)
+		return InternalServerError(c, "error requesting "+c.Path())
 	}
 
 	switch resp.StatusCode() {
-	case 400:
-		return badRequest(c, "invalid search")
 	case 200:
-		var data map[string]any
-		_ = json.Unmarshal(resp.Body(), &data)
-		return c.Status(200).JSON(data)
+		c.Set("Content-Type", "application/json")
+		return c.Status(200).Send(resp.Body())
+	case 400:
+		return BadRequest(c, "invalid search")
 	default:
-		logError(
+		LogError(
 			"Search",
-			"Requesting "+resp.Request.URL,
-			errors.New(fmt.Sprintln(resp.StatusCode(), ", ", string(resp.Body()))),
+			"Requesting "+c.Path(),
+			errors.New(strconv.Itoa(resp.StatusCode())+": "+string(resp.Body())),
 		)
-		return internalServerError(c, "error requesting "+c.Path())
+		return InternalServerError(c, "error requesting "+c.Path())
 	}
 }

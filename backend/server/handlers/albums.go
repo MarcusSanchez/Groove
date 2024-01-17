@@ -5,21 +5,9 @@ import (
 )
 
 func (h *Handlers) GetAlbum(c *fiber.Ctx) error {
-	albumID := c.Params("id")
-	if albumID == "" {
-		return c.Status(400).SendString("invalid album-id")
-	}
-
-	response := h.actions.GetAlbum(c, albumID)
-	return response
+	return h.actions.GetAlbum(c, c.Params("id"))
 }
 
 func (h *Handlers) GetAlbumTracks(c *fiber.Ctx) error {
-	albumID := c.Params("id")
-	if albumID == "" {
-		return c.Status(400).SendString("invalid album-id")
-	}
-
-	response := h.actions.GetAlbumTracks(c, albumID)
-	return response
+	return h.actions.GetAlbumTracks(c, c.Params("id"))
 }

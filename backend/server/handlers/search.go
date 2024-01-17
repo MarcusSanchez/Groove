@@ -6,18 +6,15 @@ import (
 )
 
 func (h *Handlers) Search(c *fiber.Ctx) error {
-
-	if c.Query("type") == "" {
-		return c.Status(400).SendString("invalid 'type' query parameter")
+	queryTypes := c.Query("type")
+	if queryTypes == "" {
+		return c.Status(400).SendString("type is required")
 	}
 
-	response := h.actions.Search(c,
+	return h.actions.Search(c,
 		c.Params("query"),
-		c.Query("type"),
+		queryTypes,
 		c.Query("market", "US"),
-		strconv.Itoa(
-			c.QueryInt("limit", 18),
-		),
+		strconv.Itoa(c.QueryInt("limit", 18)),
 	)
-	return response
 }
