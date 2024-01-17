@@ -1,10 +1,10 @@
 package actions
 
 import (
-	. "GrooveGuru/pkgs/util"
 	"errors"
 	"github.com/go-resty/resty/v2"
 	"github.com/gofiber/fiber/v2"
+	. "groove/pkgs/util"
 	"strconv"
 )
 

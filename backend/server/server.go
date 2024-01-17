@@ -1,11 +1,11 @@
 package server
 
 import (
-	"GrooveGuru/server/handlers"
-	"GrooveGuru/server/middleware"
 	"context"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/fx"
+	"groove/server/handlers"
+	"groove/server/middleware"
 	"log"
 )
 

@@ -1,17 +1,16 @@
 package middleware
 
 import (
-	"GrooveGuru/pkgs/ent"
-	Session "GrooveGuru/pkgs/ent/session"
-	SpotifyLink "GrooveGuru/pkgs/ent/spotifylink"
-	. "GrooveGuru/pkgs/util"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/MarcusSanchez/go-parse"
 	"github.com/go-resty/resty/v2"
 	"github.com/gofiber/fiber/v2"
+	"groove/pkgs/ent"
+	Session "groove/pkgs/ent/session"
+	SpotifyLink "groove/pkgs/ent/spotifylink"
+	. "groove/pkgs/util"
 	"strconv"
 	"time"
 )
@@ -182,9 +181,10 @@ func (m *Middlewares) SetAccess(c *fiber.Ctx) error {
 				LogError("SetAccess[MIDDLEWARE]", "getting default access token", err)
 				return InternalServerError(c, "error while authorizing")
 			}
+		} else {
+			LogError("SetAccess[MIDDLEWARE]", "checking spotify link", err)
+			return InternalServerError(c, "error while authorizing")
 		}
-		LogError("SetAccess[MIDDLEWARE]", "checking spotify link", err)
-		return InternalServerError(c, "error while authorizing")
 	}
 
 	// if the link hasn't expired, we can use it.
@@ -216,17 +216,17 @@ func (m *Middlewares) SetAccess(c *fiber.Ctx) error {
 		LogError(
 			"SetAccess[MIDDLEWARE]",
 			"refreshing token",
-			errors.New(fmt.Sprintln(resp.StatusCode(), ", ", string(resp.Body()))),
+			errors.New(strconv.Itoa(resp.StatusCode())+": "+string(resp.Body())),
 		)
 		return InternalServerError(c, "error while authorizing")
 	}
 
-	type TokenResponse struct {
+	type Tokens struct {
 		AccessToken  string `json:"access_token"`
 		RefreshToken string `json:"refresh_token"`
 	}
 
-	payload := new(TokenResponse)
+	payload := new(Tokens)
 	if json.Unmarshal(resp.Body(), payload) != nil {
 		LogError("SetAccess[MIDDLEWARE]", "unmarshalling token", err)
 		return InternalServerError(c, "error while authorizing")

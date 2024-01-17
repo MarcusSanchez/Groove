@@ -1,8 +1,8 @@
 package actions
 
 import (
-	"GrooveGuru/pkgs/ent"
-	"GrooveGuru/pkgs/env"
+	"groove/pkgs/ent"
+	"groove/pkgs/env"
 )
 
 type Actions struct {

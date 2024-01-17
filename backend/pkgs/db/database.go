@@ -1,12 +1,12 @@
 package db
 
 import (
-	"GrooveGuru/pkgs/ent"
-	"GrooveGuru/pkgs/env"
 	"context"
 	"fmt"
 	_ "github.com/lib/pq"
 	"go.uber.org/fx"
+	"groove/pkgs/ent"
+	"groove/pkgs/env"
 	"log"
 )
 

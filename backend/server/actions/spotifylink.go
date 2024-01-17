@@ -1,16 +1,16 @@
 package actions
 
 import (
-	"GrooveGuru/pkgs/ent"
-	OAuthState "GrooveGuru/pkgs/ent/oauthstate"
-	SpotifyLink "GrooveGuru/pkgs/ent/spotifylink"
-	. "GrooveGuru/pkgs/util"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"github.com/go-resty/resty/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"groove/pkgs/ent"
+	OAuthState "groove/pkgs/ent/oauthstate"
+	SpotifyLink "groove/pkgs/ent/spotifylink"
+	. "groove/pkgs/util"
 	"net/url"
 	"strconv"
 	"strings"

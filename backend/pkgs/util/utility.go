@@ -1,9 +1,9 @@
 package util
 
 import (
-	"GrooveGuru/pkgs/env"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"groove/pkgs/env"
 	"net/url"
 	"time"
 )

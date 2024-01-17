@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	. "GrooveGuru/pkgs/util"
 	"github.com/gofiber/fiber/v2"
+	. "groove/pkgs/util"
 )
 
 func (h *Handlers) LinkSpotify(c *fiber.Ctx) error {

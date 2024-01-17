@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"GrooveGuru/server/actions"
 	"github.com/gofiber/fiber/v2"
+	"groove/server/actions"
 )
 
 type Handlers struct {

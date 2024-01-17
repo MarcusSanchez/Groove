@@ -1,15 +1,14 @@
 package main
 
 import (
-	"GrooveGuru/pkgs/db"
-	"GrooveGuru/pkgs/env"
-	"GrooveGuru/server"
-	"GrooveGuru/server/actions"
-	"GrooveGuru/server/handlers"
-	"GrooveGuru/server/middleware"
-
 	_ "github.com/lib/pq"
 	"go.uber.org/fx"
+	"groove/pkgs/db"
+	"groove/pkgs/env"
+	"groove/server"
+	"groove/server/actions"
+	"groove/server/handlers"
+	"groove/server/middleware"
 )
 
 func main() {

@@ -1,15 +1,15 @@
 package actions
 
 import (
-	"GrooveGuru/pkgs/db"
-	"GrooveGuru/pkgs/ent"
-	SpotifyLink "GrooveGuru/pkgs/ent/spotifylink"
-	User "GrooveGuru/pkgs/ent/user"
-	. "GrooveGuru/pkgs/util"
 	"errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"groove/pkgs/db"
+	"groove/pkgs/ent"
+	SpotifyLink "groove/pkgs/ent/spotifylink"
+	User "groove/pkgs/ent/user"
+	. "groove/pkgs/util"
 	"time"
 )
 

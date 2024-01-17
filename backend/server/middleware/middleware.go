@@ -1,14 +1,14 @@
 package middleware
 
 import (
-	"GrooveGuru/pkgs/ent"
-	SpotifyLink "GrooveGuru/pkgs/ent/spotifylink"
-	"GrooveGuru/pkgs/env"
 	"context"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	recovery "github.com/gofiber/fiber/v2/middleware/recover"
+	"groove/pkgs/ent"
+	SpotifyLink "groove/pkgs/ent/spotifylink"
+	"groove/pkgs/env"
 	"log"
 )
 

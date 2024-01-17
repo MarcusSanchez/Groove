@@ -1,13 +1,13 @@
 package db
 
 import (
-	"GrooveGuru/pkgs/ent"
-	OAuthState "GrooveGuru/pkgs/ent/oauthstate"
-	Session "GrooveGuru/pkgs/ent/session"
-	. "GrooveGuru/pkgs/util"
 	"context"
 	"fmt"
 	"go.uber.org/fx"
+	"groove/pkgs/ent"
+	OAuthState "groove/pkgs/ent/oauthstate"
+	Session "groove/pkgs/ent/session"
+	. "groove/pkgs/util"
 	"time"
 )
 

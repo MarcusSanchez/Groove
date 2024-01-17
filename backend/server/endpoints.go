@@ -1,9 +1,9 @@
 package server
 
 import (
-	"GrooveGuru/server/handlers"
-	"GrooveGuru/server/middleware"
 	"github.com/gofiber/fiber/v2"
+	"groove/server/handlers"
+	"groove/server/middleware"
 )
 
 func SetupEndpoints(app *fiber.App, handlers *handlers.Handlers, mw *middleware.Middlewares) {

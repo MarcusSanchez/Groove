@@ -1,4 +1,4 @@
-module GrooveGuru
+module groove
 
 go 1.20
 

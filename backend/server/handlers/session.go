@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	. "GrooveGuru/pkgs/util"
 	"github.com/MarcusSanchez/go-parse"
 	"github.com/gofiber/fiber/v2"
+	. "groove/pkgs/util"
 	"strings"
 )
 
