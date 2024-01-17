@@ -181,7 +181,6 @@ func (a *Actions) Authenticate(c *fiber.Ctx) error {
 		LogError("Authenticate", "update session", err)
 		return InternalServerError(c, "error updating session")
 	}
-
 	// refresh cookie expiration with same values.
 	SetSessionCookies(c, session.Token, session.Csrf, expiration, a.env.SameSite, a.env.Secure)
 

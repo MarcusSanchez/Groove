@@ -64,7 +64,7 @@ func (a *Actions) LinkSpotify(c *fiber.Ctx) error {
 	baseURL.RawQuery = URLSearchParams(Params{
 		"response_type": "code",
 		"client_id":     a.env.SpotifyClient,
-		"scopes":        strings.Join(scopes, " "),
+		"scope":         strings.Join(scopes, " "),
 		"redirect_uri":  a.env.BackendURL + "/api/spotify/callback",
 		"state":         state,
 		"access_type":   accessType,
