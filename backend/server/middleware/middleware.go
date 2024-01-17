@@ -55,16 +55,19 @@ func (*Middlewares) ReactServer(c *fiber.Ctx) error {
 }
 
 /* utility */
+
+// defaultAccessToken returns the access token of the default user.
 func (m *Middlewares) defaultAccessToken() (*ent.SpotifyLink, error) {
 	link, err := m.client.SpotifyLink.
 		Query().
 		Where(SpotifyLink.UserIDEQ(1)).
 		First(context.Background())
-	if ent.IsNotFound(err) {
-		log.Fatal("default access token not set")
-	} else if err != nil {
+	if err != nil {
+		if ent.IsNotFound(err) {
+			log.Fatal("default access token not set")
+		}
 		return nil, err
 	}
 
-	return link, err
+	return link, nil
 }
