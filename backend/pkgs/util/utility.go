@@ -8,8 +8,15 @@ import (
 )
 
 const (
-	TimeWeek      = 24 * 7 * time.Hour
+	// TimeWeek is used for session cookies expiration
+	TimeWeek = 24 * 7 * time.Hour
+	// Time58Minutes is used for Spotify Access Token expiration
 	Time58Minutes = 58 * time.Minute
+)
+
+const (
+	SpotifyAPI         = "https://api.spotify.com/v1"
+	SpotifyAccountsAPI = "https://accounts.spotify.com/api"
 )
 
 type (
@@ -17,11 +24,6 @@ type (
 	Headers map[string]string
 	Params  map[string]string
 )
-
-type Proxy struct {
-	Endpoint string
-	Access   string
-}
 
 // LogError formats and prints error with context.
 func LogError(fn, context string, err error) {

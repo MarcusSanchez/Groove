@@ -11,6 +11,7 @@ import (
 	OAuthState "groove/pkgs/ent/oauthstate"
 	SpotifyLink "groove/pkgs/ent/spotifylink"
 	. "groove/pkgs/util"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -70,7 +71,7 @@ func (a *Actions) LinkSpotify(c *fiber.Ctx) error {
 		"access_type":   accessType,
 	})
 
-	return c.Status(200).SendString(baseURL.String())
+	return c.Status(http.StatusOK).SendString(baseURL.String())
 }
 
 // SpotifyCallback handles the redirect from the Spotify Authorization page.
@@ -105,7 +106,7 @@ func (a *Actions) SpotifyCallback(c *fiber.Ctx, code, state string) error {
 			"Potential CSRF Attempt",
 			errors.New("state mismatch for user: "+strconv.Itoa(session.UserID)),
 		)
-		return Forbiddened(c, "state mismatch")
+		return Forbidden(c, "state mismatch")
 	}
 
 	// clear state from store
@@ -130,7 +131,7 @@ func (a *Actions) SpotifyCallback(c *fiber.Ctx, code, state string) error {
 			"redirect_uri": a.env.BackendURL + "/api/spotify/callback",
 			"grant_type":   "authorization_code",
 		}).
-		Post("https://accounts.spotify.com/api/token")
+		Post(SpotifyAccountsAPI + "/token")
 	if err != nil {
 		LogError("SpotifyCallback", "Requesting token", err)
 		return InternalServerError(c, "error requesting token")
@@ -160,7 +161,7 @@ func (a *Actions) SpotifyCallback(c *fiber.Ctx, code, state string) error {
 		return InternalServerError(c, "error linking spotify")
 	}
 
-	return c.Redirect(a.env.FrontendURL+"/dashboard/profile", 302)
+	return c.Redirect(a.env.FrontendURL+"/dashboard/profile", http.StatusFound)
 }
 
 // UnlinkSpotify deletes the SpotifyLink for the user.
@@ -188,7 +189,7 @@ func (a *Actions) UnlinkSpotify(c *fiber.Ctx) error {
 		return InternalServerError(c, "error unlinking spotify")
 	}
 
-	return c.SendStatus(fiber.StatusNoContent)
+	return c.SendStatus(http.StatusNoContent)
 }
 
 // GetCurrentUser retrieves the current user's ID if they are linked to Spotify.
@@ -202,7 +203,7 @@ func (a *Actions) GetCurrentUser(c *fiber.Ctx) error {
 		SetHeaders(Headers{
 			"Authorization": "Bearer " + access,
 		}).
-		Get("https://api.spotify.com/v1/me")
+		Get(SpotifyAPI + "/me")
 	if err != nil {
 		LogError("GetCurrentUser", "Requesting current user", err)
 		return InternalServerError(c, "error getting current user")
@@ -218,5 +219,5 @@ func (a *Actions) GetCurrentUser(c *fiber.Ctx) error {
 		return InternalServerError(c, "error getting current user")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(payload)
+	return c.Status(http.StatusOK).JSON(payload)
 }

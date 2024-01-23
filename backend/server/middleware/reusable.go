@@ -11,6 +11,7 @@ import (
 	Session "groove/pkgs/ent/session"
 	SpotifyLink "groove/pkgs/ent/spotifylink"
 	. "groove/pkgs/util"
+	"net/http"
 	"strconv"
 	"time"
 )
@@ -45,7 +46,7 @@ func (m *Middlewares) RedirectAuthorized(c *fiber.Ctx) error {
 		return c.Next()
 	}
 
-	return c.SendStatus(fiber.StatusPermanentRedirect)
+	return c.SendStatus(http.StatusPermanentRedirect)
 }
 
 // AuthorizeAny authorizes the user if the Authorization cookie is set and valid (no permissions necessary).
@@ -103,7 +104,7 @@ func (m *Middlewares) RedirectLinked(c *fiber.Ctx) error {
 		return c.Next()
 	}
 
-	return c.SendStatus(fiber.StatusPermanentRedirect)
+	return c.SendStatus(http.StatusPermanentRedirect)
 }
 
 // CheckCSRF checks if the Csrf token in the body matches the one in the session.
@@ -154,7 +155,7 @@ func (m *Middlewares) CheckCSRF(c *fiber.Ctx) error {
 			"Potential CSRF Attempt",
 			errors.New("csrf token mismatch for user: "+strconv.Itoa(session.UserID)),
 		)
-		return Forbiddened(c, "csrf token mismatch")
+		return Forbidden(c, "csrf token mismatch")
 	}
 
 	c.Locals("session", session)
@@ -206,7 +207,7 @@ func (m *Middlewares) SetAccess(c *fiber.Ctx) error {
 			"grant_type":    "refresh_token",
 			"refresh_token": link.RefreshToken,
 		})).
-		Post("https://accounts.spotify.com/api/token")
+		Post(SpotifyAccountsAPI + "/token")
 	if err != nil {
 		LogError("SetAccess[MIDDLEWARE]", "refreshing token", err)
 		return InternalServerError(c, "error while authorizing")
@@ -297,7 +298,7 @@ func (m *Middlewares) AuthorizeLinked(c *fiber.Ctx) error {
 		LogError("AuthorizeLinked[MIDDLEWARE]", "checking spotify link", err)
 		return InternalServerError(c, "error while authorizing")
 	} else if !exists {
-		return Forbiddened(c, "account not linked")
+		return Forbidden(c, "account not linked")
 	}
 
 	c.Locals("session", session)

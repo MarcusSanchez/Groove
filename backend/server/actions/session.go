@@ -10,6 +10,7 @@ import (
 	SpotifyLink "groove/pkgs/ent/spotifylink"
 	User "groove/pkgs/ent/user"
 	. "groove/pkgs/util"
+	"net/http"
 	"time"
 )
 
@@ -80,7 +81,7 @@ func (a *Actions) Register(c *fiber.Ctx, password, username, email string) error
 	}
 	SetSessionCookies(c, token, csrf, expiration, a.env.SameSite, a.env.Secure)
 
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+	return c.Status(http.StatusCreated).JSON(fiber.Map{
 		"acknowledged": true,
 		"message":      "user " + username + " created",
 		"user": fiber.Map{
@@ -135,7 +136,7 @@ func (a *Actions) Login(c *fiber.Ctx, username, password string) error {
 	}
 	SetSessionCookies(c, token, csrf, expiration, a.env.SameSite, a.env.Secure)
 
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+	return c.Status(http.StatusCreated).JSON(fiber.Map{
 		"acknowledged": true,
 		"user": fiber.Map{
 			"username": user.Username,
@@ -157,7 +158,7 @@ func (a *Actions) Logout(c *fiber.Ctx) error {
 	}
 
 	ExpireSessionCookies(c, a.env.SameSite, a.env.Secure)
-	return c.SendStatus(fiber.StatusNoContent)
+	return c.SendStatus(http.StatusNoContent)
 }
 
 // Authenticate resets the session expiration and returns the user's username, email, and status for spotify link.
@@ -194,7 +195,7 @@ func (a *Actions) Authenticate(c *fiber.Ctx) error {
 		return InternalServerError(c, "error checking spotify account")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"user": fiber.Map{
 			"username": user.Username,
 			"email":    user.Email,

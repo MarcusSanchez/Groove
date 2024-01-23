@@ -43,6 +43,15 @@ func (s *Scheduler) ticker(d time.Duration) *time.Ticker {
 	return ticker
 }
 
+func (s *Scheduler) RunTask(task func()) {
+	defer func() {
+		if r := recover(); r != nil {
+			LogError("Scheduler-RunTask", "Background Task", fmt.Errorf("%v", r))
+		}
+	}()
+	task()
+}
+
 func (s *Scheduler) Start() {
 	go func() {
 		defer close(s.done)
@@ -52,8 +61,8 @@ func (s *Scheduler) Start() {
 		for {
 			select {
 			case <-ticker24h.C:
-				go s.CleanSession()
-				go s.CleanOAuthStore()
+				go s.RunTask(s.CleanSession)
+				go s.RunTask(s.CleanOAuthStore)
 			case <-s.stop:
 				return
 			}
@@ -70,7 +79,6 @@ func (s *Scheduler) Shutdown() {
 }
 
 // CleanSession deletes expired sessions every 24 hours.
-// It is called in the init function of database.go.
 // Required as sessions expire, the database still stores them.
 //
 // (there is no security risk to lazy clear the database, cookies expire at the
@@ -81,7 +89,7 @@ func (s *Scheduler) CleanSession() {
 		Where(Session.ExpirationLT(time.Now())).
 		Exec(context.Background())
 	if err != nil {
-		LogError("SessionCleaner[CRON]", "Worker", err)
+		LogError("CleanSession[CRON]", "Worker", err)
 	} else {
 		fmt.Printf(
 			"%s [SUCCESS] Session Cleared (affected: %d)\n",
@@ -92,7 +100,6 @@ func (s *Scheduler) CleanSession() {
 }
 
 // CleanOAuthStore deletes expired states every 24 hours.
-// It is called in the init function of database.go.
 // Required as states expire without being fulfilled, meaning the database still stores them.
 func (s *Scheduler) CleanOAuthStore() {
 	affected, err := s.client.OAuthState.
@@ -100,7 +107,7 @@ func (s *Scheduler) CleanOAuthStore() {
 		Where(OAuthState.ExpirationLT(time.Now())).
 		Exec(context.Background())
 	if err != nil {
-		LogError("OAuthStoreCleaner[CRON]", "Worker", err)
+		LogError("CleanOAuthStore[CRON]", "Worker", err)
 	} else {
 		fmt.Printf(
 			"%s [SUCCESS] OAuthStore Cleared (affected: %d)\n",

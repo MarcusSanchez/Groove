@@ -5,6 +5,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/gofiber/fiber/v2"
 	. "groove/pkgs/util"
+	"net/http"
 	"strconv"
 )
 
@@ -26,7 +27,7 @@ func (*Actions) Search(c *fiber.Ctx, query, Type, market string, limit string) e
 			"Authorization": "Bearer " + access,
 			"Accept":        "application/json",
 		}).
-		Get("https://api.spotify.com/v1/search?" + qParams)
+		Get(SpotifyAPI + "/search?" + qParams)
 	if err != nil {
 		LogError("Search", "Requesting ", err)
 		return InternalServerError(c, "error requesting "+c.Path())
@@ -35,7 +36,7 @@ func (*Actions) Search(c *fiber.Ctx, query, Type, market string, limit string) e
 	switch resp.StatusCode() {
 	case 200:
 		c.Set("Content-Type", "application/json")
-		return c.Status(200).Send(resp.Body())
+		return c.Status(http.StatusOK).Send(resp.Body())
 	case 400:
 		return BadRequest(c, "invalid search")
 	default:

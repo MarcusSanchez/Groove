@@ -5,31 +5,35 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/gofiber/fiber/v2"
 	. "groove/pkgs/util"
+	"net/http"
 	"strconv"
 )
 
 // GetAllPlaylists returns all playlists for the current user.
 func (*Actions) GetAllPlaylists(c *fiber.Ctx) error {
-	return proxyPlaylistRequest(c, Proxy{
+	proxy := &Proxy{
 		Endpoint: "/me/playlists?limit=50",
 		Access:   c.Locals("access").(string),
-	})
+	}
+	return proxy.PlaylistRequest(c)
 }
 
 // GetPlaylist returns a playlist with the first 100 tracks with the given id.
 func (*Actions) GetPlaylist(c *fiber.Ctx, playlistID string) error {
-	return proxyPlaylistRequest(c, Proxy{
+	proxy := &Proxy{
 		Endpoint: "/playlists/" + playlistID + "?market=US&limit=100",
 		Access:   c.Locals("access").(string),
-	})
+	}
+	return proxy.PlaylistRequest(c)
 }
 
 // GetMorePlaylistTracks returns a playlist with the next 100 tracks with the given id.
 func (*Actions) GetMorePlaylistTracks(c *fiber.Ctx, playlistID, offset string) error {
-	return proxyPlaylistRequest(c, Proxy{
-		Endpoint: "/playlists/" + playlistID + "?market=US&limit=100&offset=" + offset,
+	proxy := &Proxy{
+		Endpoint: "/playlists/" + playlistID + "/tracks?market=US&limit=100&offset=" + offset,
 		Access:   c.Locals("access").(string),
-	})
+	}
+	return proxy.PlaylistRequest(c)
 }
 
 // AddTrackToPlaylist adds a track to a playlist with the given ids.
@@ -47,7 +51,7 @@ func (*Actions) AddTrackToPlaylist(c *fiber.Ctx, playlistID, trackID string) err
 			"Accept":        "application/json",
 		}).
 		SetBody(`{"uris":["spotify:track:` + trackID + `"]}`).
-		Post("https://api.spotify.com/v1" + endpoint)
+		Post(SpotifyAPI + endpoint)
 	if err != nil {
 		LogError("AddTrackToPlaylist", "Requesting "+endpoint, err)
 		return InternalServerError(c, "error requesting "+c.Path())
@@ -55,13 +59,13 @@ func (*Actions) AddTrackToPlaylist(c *fiber.Ctx, playlistID, trackID string) err
 
 	switch resp.StatusCode() {
 	case 201:
-		return c.Status(201).SendString("track added to playlist")
+		return c.Status(http.StatusCreated).SendString("track added to playlist")
 	case 400:
 		return BadRequest(c, "invalid track-id")
 	case 403:
 		return BadRequest(c, "playlist is not collaborative")
 	case 404:
-		return BadRequest(c, "playlist not found", 404)
+		return BadRequest(c, "playlist not found", http.StatusNotFound)
 	default:
 		LogError(
 			"AddTrackToPlaylist",
@@ -87,7 +91,7 @@ func (*Actions) RemoveTrackFromPlaylist(c *fiber.Ctx, playlistID, trackID string
 			"Accept":        "application/json",
 		}).
 		SetBody(`{"tracks":[{ "uri":"spotify:track:` + trackID + `"}]}`).
-		Delete("https://api.spotify.com/v1" + endpoint)
+		Delete(SpotifyAPI + endpoint)
 	if err != nil {
 		LogError("RemoveTrackFromPlaylist", "Requesting "+endpoint, err)
 		return InternalServerError(c, "error requesting "+c.Path())
@@ -95,54 +99,18 @@ func (*Actions) RemoveTrackFromPlaylist(c *fiber.Ctx, playlistID, trackID string
 
 	switch resp.StatusCode() {
 	case 200:
-		return c.Status(fiber.StatusOK).SendString("track removed from playlist")
+		return c.Status(http.StatusOK).SendString("track removed from playlist")
 	case 400:
 		return BadRequest(c, "invalid track-id")
 	case 403:
 		return BadRequest(c, "playlist is not collaborative")
 	case 404:
-		return BadRequest(c, "playlist not found", 404)
+		return BadRequest(c, "playlist not found", http.StatusNotFound)
 	default:
 		LogError(
 			"RemoveTrackFromPlaylist",
 			"Requesting "+c.Path(),
 			errors.New(strconv.Itoa(resp.StatusCode())+": "+string(resp.Body())),
-		)
-		return InternalServerError(c, "error requesting "+c.Path())
-	}
-}
-
-/* helpers **/
-
-// proxyPlaylistRequest proxies a request to the Spotify API for a playlist.
-// returns 200 with the playlist tracks if successful.
-// returns 400 if the playlist-id is invalid.
-// returns 404 if the playlist is not found.
-func proxyPlaylistRequest(c *fiber.Ctx, proxy Proxy) error {
-	resp, err := resty.New().R().
-		SetHeaders(Headers{
-			"Authorization": "Bearer " + proxy.Access,
-			"Accept":        "application/json",
-		}).
-		Get("https://api.spotify.com/v1" + proxy.Endpoint)
-	if err != nil {
-		LogError("proxyPlaylistRequest", "Requesting "+proxy.Endpoint, err)
-		return InternalServerError(c, "error requesting "+c.Path())
-	}
-
-	switch resp.StatusCode() {
-	case 200:
-		c.Set("Content-Type", "application/json")
-		return c.Status(fiber.StatusOK).Send(resp.Body())
-	case 400:
-		return BadRequest(c, "invalid playlist-id")
-	case 404:
-		return BadRequest(c, "playlist not found", 404)
-	default:
-		LogError(
-			"proxyPlaylistResponse",
-			"Requesting "+resp.Request.URL,
-			errors.New(strconv.Itoa(resp.StatusCode())+", "+string(resp.Body())),
 		)
 		return InternalServerError(c, "error requesting "+c.Path())
 	}

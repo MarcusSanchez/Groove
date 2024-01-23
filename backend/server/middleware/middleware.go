@@ -31,7 +31,7 @@ func ProvideMiddlewares(shutdowner fx.Shutdowner, client *ent.Client, env *env.E
 func (m *Middlewares) Attach(app *fiber.App) {
 	app.Static("/", "./public")
 	// catch-all route for the frontend.
-	app.Use("/", m.ReactServer)
+	app.Use(m.ReactServer)
 	app.Use(logger.New())
 	// if the server were to crash, this would restart the server.
 	app.Use(recovery.New())
