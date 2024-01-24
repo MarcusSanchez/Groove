@@ -24,7 +24,7 @@ func (a *Actions) Register(c *fiber.Ctx, password, username, email string) error
 	}
 
 	ctx := c.Context()
-	exists, err := a.client.User.
+	exists, err := a.Client.User.
 		Query().
 		Where(User.UsernameEQ(username)).
 		Exist(ctx)
@@ -36,7 +36,7 @@ func (a *Actions) Register(c *fiber.Ctx, password, username, email string) error
 	}
 
 	// check if email is already taken.
-	exists, err = a.client.User.
+	exists, err = a.Client.User.
 		Query().
 		Where(User.EmailEQ(email)).
 		Exist(ctx)
@@ -54,7 +54,7 @@ func (a *Actions) Register(c *fiber.Ctx, password, username, email string) error
 	}
 
 	// create and save the user.
-	user, err := a.client.User.Create().
+	user, err := a.Client.User.Create().
 		SetEmail(email).
 		SetPassword(string(hashedPassword)).
 		SetUsername(username).
@@ -69,7 +69,7 @@ func (a *Actions) Register(c *fiber.Ctx, password, username, email string) error
 	csrf := uuid.New().String()
 	expiration := time.Now().Add(TimeWeek)
 
-	_, err = a.client.Session.Create().
+	_, err = a.Client.Session.Create().
 		SetToken(token).
 		SetUser(user).
 		SetCsrf(csrf).
@@ -79,7 +79,7 @@ func (a *Actions) Register(c *fiber.Ctx, password, username, email string) error
 		LogError("Register", "create session", err)
 		return InternalServerError(c, "error creating session")
 	}
-	SetSessionCookies(c, token, csrf, expiration, a.env.SameSite, a.env.Secure)
+	SetSessionCookies(c, token, csrf, expiration, a.Env.SameSite, a.Env.Secure)
 
 	return c.Status(http.StatusCreated).JSON(fiber.Map{
 		"acknowledged": true,
@@ -97,7 +97,7 @@ func (a *Actions) Register(c *fiber.Ctx, password, username, email string) error
 func (a *Actions) Login(c *fiber.Ctx, username, password string) error {
 	ctx := c.Context()
 	// check if username exists.
-	user, err := a.client.User.
+	user, err := a.Client.User.
 		Query().
 		Where(User.UsernameEQ(username)).
 		First(ctx)
@@ -124,7 +124,7 @@ func (a *Actions) Login(c *fiber.Ctx, username, password string) error {
 	csrf := uuid.New().String()
 	expiration := time.Now().Add(TimeWeek)
 
-	_, err = a.client.Session.Create().
+	_, err = a.Client.Session.Create().
 		SetToken(token).
 		SetUser(user).
 		SetCsrf(csrf).
@@ -134,7 +134,7 @@ func (a *Actions) Login(c *fiber.Ctx, username, password string) error {
 		LogError("Login", "create session", err)
 		return InternalServerError(c, "error creating session")
 	}
-	SetSessionCookies(c, token, csrf, expiration, a.env.SameSite, a.env.Secure)
+	SetSessionCookies(c, token, csrf, expiration, a.Env.SameSite, a.Env.Secure)
 
 	return c.Status(http.StatusCreated).JSON(fiber.Map{
 		"acknowledged": true,
@@ -151,13 +151,13 @@ func (a *Actions) Logout(c *fiber.Ctx) error {
 	session := c.Locals("session").(*ent.Session)
 	ctx := c.Context()
 
-	if err := a.client.Session.DeleteOne(session).Exec(ctx); err != nil {
+	if err := a.Client.Session.DeleteOne(session).Exec(ctx); err != nil {
 		LogError("Logout", "delete session", err)
 		// we don't need to alert the user this failed. (it shouldn't fail anyway)
 		// they will lose access to their account, and the session background worker will clean it up.
 	}
 
-	ExpireSessionCookies(c, a.env.SameSite, a.env.Secure)
+	ExpireSessionCookies(c, a.Env.SameSite, a.Env.Secure)
 	return c.SendStatus(http.StatusNoContent)
 }
 
@@ -167,7 +167,7 @@ func (a *Actions) Authenticate(c *fiber.Ctx) error {
 	ctx := c.Context()
 	session := c.Locals("session").(*ent.Session)
 
-	user, err := a.client.User.
+	user, err := a.Client.User.
 		Query().
 		Where(User.IDEQ(session.UserID)).
 		First(ctx)
@@ -183,10 +183,10 @@ func (a *Actions) Authenticate(c *fiber.Ctx) error {
 		return InternalServerError(c, "error updating session")
 	}
 	// refresh cookie expiration with same values.
-	SetSessionCookies(c, session.Token, session.Csrf, expiration, a.env.SameSite, a.env.Secure)
+	SetSessionCookies(c, session.Token, session.Csrf, expiration, a.Env.SameSite, a.Env.Secure)
 
 	// check for spotify link.
-	exists, err := a.client.SpotifyLink.
+	exists, err := a.Client.SpotifyLink.
 		Query().
 		Where(SpotifyLink.UserIDEQ(session.UserID)).
 		Exist(ctx)

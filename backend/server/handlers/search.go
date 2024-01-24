@@ -12,7 +12,7 @@ func (h *Handlers) Search(c *fiber.Ctx) error {
 		return BadRequest(c, "type is required")
 	}
 
-	return h.actions.Search(c,
+	return h.Actions.Search(c,
 		c.Params("query"),
 		queryTypes,
 		c.Query("market", "US"),

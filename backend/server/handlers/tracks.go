@@ -5,5 +5,5 @@ import (
 )
 
 func (h *Handlers) GetTrack(c *fiber.Ctx) error {
-	return h.actions.GetTrack(c, c.Params("id"))
+	return h.Actions.GetTrack(c, c.Params("id"))
 }

@@ -1,12 +1,8 @@
 package server
 
-import (
-	"github.com/gofiber/fiber/v2"
-	"groove/server/handlers"
-	"groove/server/middleware"
-)
+func (s *Server) SetupEndpoints() {
+	app, mw, handlers := s.app, s.middleware, s.handlers
 
-func SetupEndpoints(app *fiber.App, handlers *handlers.Handlers, mw *middleware.Middlewares) {
 	/** api endpoints **/
 	api := app.Group("/api")
 	api.Get("/health", handlers.Health)

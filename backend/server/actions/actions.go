@@ -6,13 +6,6 @@ import (
 )
 
 type Actions struct {
-	client *ent.Client
-	env    *env.Env
-}
-
-func ProvideActions(client *ent.Client, env *env.Env) *Actions {
-	return &Actions{
-		client: client,
-		env:    env,
-	}
+	Client *ent.Client
+	Env    *env.Env
 }

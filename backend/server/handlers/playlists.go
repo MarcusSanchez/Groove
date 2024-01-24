@@ -7,11 +7,11 @@ import (
 )
 
 func (h *Handlers) GetAllPlaylists(c *fiber.Ctx) error {
-	return h.actions.GetAllPlaylists(c)
+	return h.Actions.GetAllPlaylists(c)
 }
 
 func (h *Handlers) GetPlaylistWithTracks(c *fiber.Ctx) error {
-	return h.actions.GetPlaylist(c, c.Params("id"))
+	return h.Actions.GetPlaylist(c, c.Params("id"))
 }
 
 func (h *Handlers) GetMorePlaylistTracks(c *fiber.Ctx) error {
@@ -20,7 +20,7 @@ func (h *Handlers) GetMorePlaylistTracks(c *fiber.Ctx) error {
 		return BadRequest(c, "invalid offset")
 	}
 
-	return h.actions.GetMorePlaylistTracks(c, c.Params("id"), strconv.Itoa(offset))
+	return h.Actions.GetMorePlaylistTracks(c, c.Params("id"), strconv.Itoa(offset))
 }
 
 func (h *Handlers) AddTrackToPlaylist(c *fiber.Ctx) error {
@@ -29,7 +29,7 @@ func (h *Handlers) AddTrackToPlaylist(c *fiber.Ctx) error {
 		return BadRequest(c, "track-id is required")
 	}
 
-	return h.actions.AddTrackToPlaylist(c, c.Params("id"), trackID)
+	return h.Actions.AddTrackToPlaylist(c, c.Params("id"), trackID)
 }
 
 func (h *Handlers) RemoveTrackFromPlaylist(c *fiber.Ctx) error {
@@ -38,5 +38,5 @@ func (h *Handlers) RemoveTrackFromPlaylist(c *fiber.Ctx) error {
 		return BadRequest(c, "track-id is required")
 	}
 
-	return h.actions.RemoveTrackFromPlaylist(c, c.Params("id"), trackID)
+	return h.Actions.RemoveTrackFromPlaylist(c, c.Params("id"), trackID)
 }

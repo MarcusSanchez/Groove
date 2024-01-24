@@ -14,33 +14,23 @@ import (
 )
 
 type Middlewares struct {
-	client     *ent.Client
-	env        *env.Env
-	shutdowner fx.Shutdowner
-}
-
-func ProvideMiddlewares(shutdowner fx.Shutdowner, client *ent.Client, env *env.Env) *Middlewares {
-	return &Middlewares{
-		client:     client,
-		env:        env,
-		shutdowner: shutdowner,
-	}
+	Client     *ent.Client
+	Env        *env.Env
+	Shutdowner fx.Shutdowner
 }
 
 // Attach attaches the middleware that run on all endpoints.
 func (m *Middlewares) Attach(app *fiber.App) {
 	app.Static("/", "./public")
-	// catch-all route for the frontend.
-	app.Use(m.ReactServer)
+	app.Use(recovery.New()) /* recovers from panics and delivers an internal server error */
 	app.Use(logger.New())
-	// if the server were to crash, this would restart the server.
-	app.Use(recovery.New())
-	switch m.env.IsProd {
+	app.Use(m.ReactServer) /* serves the frontend */
+	switch m.Env.IsProd {
 	case false:
 		// in development, frontend and backend are listening on different ports;
 		// therefore CORS needs to be configured to allow the frontend url.
 		app.Use(cors.New(cors.Config{
-			AllowOrigins:     m.env.FrontendURL,
+			AllowOrigins:     m.Env.FrontendURL,
 			AllowCredentials: true,
 		}))
 	}
@@ -57,18 +47,16 @@ func (*Middlewares) ReactServer(c *fiber.Ctx) error {
 	return c.SendFile("./public/index.html")
 }
 
-/* utility */
-
-// defaultAccessToken returns the access token of the default user.
+// defaultAccessToken utility function that returns the access token of the default user.
 func (m *Middlewares) defaultAccessToken() (*ent.SpotifyLink, error) {
-	link, err := m.client.SpotifyLink.
+	link, err := m.Client.SpotifyLink.
 		Query().
 		Where(SpotifyLink.UserIDEQ(1)).
 		First(context.Background())
 	if err != nil {
 		if ent.IsNotFound(err) {
 			LogError("defaultAccessToken", "default user not set or deleted", err)
-			_ = m.shutdowner.Shutdown()
+			_ = m.Shutdowner.Shutdown()
 		}
 		return nil, err
 	}

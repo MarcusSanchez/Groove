@@ -6,7 +6,7 @@ import (
 )
 
 func (h *Handlers) LinkSpotify(c *fiber.Ctx) error {
-	return h.actions.LinkSpotify(c)
+	return h.Actions.LinkSpotify(c)
 }
 
 func (h *Handlers) SpotifyCallback(c *fiber.Ctx) error {
@@ -15,13 +15,13 @@ func (h *Handlers) SpotifyCallback(c *fiber.Ctx) error {
 		return BadRequest(c, "invalid query params")
 	}
 
-	return h.actions.SpotifyCallback(c, code, state)
+	return h.Actions.SpotifyCallback(c, code, state)
 }
 
 func (h *Handlers) UnlinkSpotify(c *fiber.Ctx) error {
-	return h.actions.UnlinkSpotify(c)
+	return h.Actions.UnlinkSpotify(c)
 }
 
 func (h *Handlers) GetCurrentUser(c *fiber.Ctx) error {
-	return h.actions.GetCurrentUser(c)
+	return h.Actions.GetCurrentUser(c)
 }

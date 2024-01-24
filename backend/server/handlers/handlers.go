@@ -7,13 +7,7 @@ import (
 )
 
 type Handlers struct {
-	actions *actions.Actions
-}
-
-func ProvideHandlers(actions *actions.Actions) *Handlers {
-	return &Handlers{
-		actions: actions,
-	}
+	Actions *actions.Actions
 }
 
 // Health returns a 200 if the server is running.

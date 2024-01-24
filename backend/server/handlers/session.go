@@ -20,7 +20,7 @@ func (h *Handlers) Register(c *fiber.Ctx) error {
 		return BadRequest(c, err.Error())
 	}
 
-	return h.actions.Register(c,
+	return h.Actions.Register(c,
 		payload.Password,
 		payload.Username,
 		strings.ToLower(payload.Email),
@@ -39,16 +39,16 @@ func (h *Handlers) Login(c *fiber.Ctx) error {
 		return BadRequest(c, err.Error())
 	}
 
-	return h.actions.Login(c,
+	return h.Actions.Login(c,
 		payload.Username,
 		payload.Password,
 	)
 }
 
 func (h *Handlers) Logout(c *fiber.Ctx) error {
-	return h.actions.Logout(c)
+	return h.Actions.Logout(c)
 }
 
 func (h *Handlers) Authenticate(c *fiber.Ctx) error {
-	return h.actions.Authenticate(c)
+	return h.Actions.Authenticate(c)
 }

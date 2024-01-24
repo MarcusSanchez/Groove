@@ -6,9 +6,6 @@ import (
 	"groove/pkgs/db"
 	"groove/pkgs/env"
 	"groove/server"
-	"groove/server/actions"
-	"groove/server/handlers"
-	"groove/server/middleware"
 )
 
 func main() {
@@ -16,12 +13,9 @@ func main() {
 		fx.Provide(
 			db.ProvideClient,
 			env.ProvideEnvVars,
-			middleware.ProvideMiddlewares,
-			handlers.ProvideHandlers,
-			actions.ProvideActions,
 		),
 		fx.Invoke(
-			server.InvokeFiber,
+			server.InvokeServer,
 			db.InvokeScheduler,
 		),
 	).Run()

@@ -5,9 +5,9 @@ import (
 )
 
 func (h *Handlers) GetAlbum(c *fiber.Ctx) error {
-	return h.actions.GetAlbum(c, c.Params("id"))
+	return h.Actions.GetAlbum(c, c.Params("id"))
 }
 
 func (h *Handlers) GetAlbumTracks(c *fiber.Ctx) error {
-	return h.actions.GetAlbumTracks(c, c.Params("id"))
+	return h.Actions.GetAlbumTracks(c, c.Params("id"))
 }
