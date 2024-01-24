@@ -66,7 +66,7 @@ function AlbumPage() {
   }, [hookedParams]);
 
   const swapAlbum = async (id: string) => {
-    // update url (required for back button since react router doesn't care for query params)
+    // update url (required for back button since react server doesn't care for query params)
     window.history.pushState({}, "", `${window.location.pathname}?${params.toString()}`);
     params.set("id", id);
     navigate(`?${params.toString()}`, { replace: true });

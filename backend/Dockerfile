@@ -7,7 +7,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go generate ./ent
+RUN go generate ./pkgs/ent
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
