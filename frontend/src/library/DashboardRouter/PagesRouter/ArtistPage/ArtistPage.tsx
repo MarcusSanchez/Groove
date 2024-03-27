@@ -262,7 +262,7 @@ function ArtistPage() {
                       <img
                         onClick={() => addTrackToPlaylist(playlist)}
                         className="w-14 h-14 rounded-md hover:cursor-pointer border-black border"
-                        src={playlist.images[0]?.url || noImageURL}
+                        src={playlist.images?.[0]?.url || noImageURL}
                         alt="playlist image"
                       />
                       <div className="flex flex-col">

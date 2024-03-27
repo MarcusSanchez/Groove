@@ -43,7 +43,11 @@ function AllPlaylists() {
                 {playlists?.items.map((playlist, i) => (
                   playlist.owner.id === spotifyID &&
                   <div key={i} className="flex gap-2 ">
-                    <img className="sm:w-20 w-16 sm:h-20 h-16 rounded-md hover:cursor-pointer border-black border" src={playlist.images?.[0]?.url || noImageURL} alt="playlist Image" />
+                    <img
+                      className="sm:w-20 w-16 sm:h-20 h-16 rounded-md hover:cursor-pointer border-black border"
+                      src={playlist.images?.[0]?.url || noImageURL}
+                      alt="playlist Image"
+                    />
                     <div className="flex flex-col">
                       <HashLink
                         to={`/dashboard/pages/playlist?id=${playlist.id}#top`}
