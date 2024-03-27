@@ -16,7 +16,7 @@ export type Playlist = {
   };
   href: string;
   id: string;
-  images: Image[];
+  images: Image[] | null;
   name: string;
   owner: {
     display_name: string;
