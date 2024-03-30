@@ -58,7 +58,7 @@ func (*Actions) AddTrackToPlaylist(c *fiber.Ctx, playlistID, trackID string) err
 	}
 
 	switch resp.StatusCode() {
-	case 201:
+	case 200:
 		return c.Status(http.StatusCreated).SendString("track added to playlist")
 	case 400:
 		return BadRequest(c, "invalid track-id")
